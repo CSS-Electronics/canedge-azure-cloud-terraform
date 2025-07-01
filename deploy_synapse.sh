@@ -41,7 +41,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
 
-    --dataset)
+    --database)
       DATABASE_NAME="$2"
       shift
       shift
