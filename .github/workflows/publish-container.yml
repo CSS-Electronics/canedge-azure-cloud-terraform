@@ -3,10 +3,18 @@ name: Publish Container Image
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  
+  # Run automatically when Docker files are changed
+  push:
+    paths:
+      - 'synapse/modules/container_app_job/docker/**'
+  pull_request:
+    paths:
+      - 'synapse/modules/container_app_job/docker/**'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: matinf/canedge-synapse-map-tables
+  IMAGE_NAME: css-electronics/canedge-synapse-map-tables
 
 jobs:
   build-and-push-image:
