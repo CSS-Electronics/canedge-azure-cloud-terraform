@@ -98,18 +98,38 @@ else
   echo "Found subscription: $SUB_NAME"
 fi
 
-# Register the Microsoft.Synapse resource provider
+# Register required resource providers
 echo "Registering the Microsoft.Synapse resource provider..."
 az provider register --namespace Microsoft.Synapse
-echo "Waiting for registration to complete (this may take a few minutes)..."
-az provider show -n Microsoft.Synapse --query "registrationState"
 
-# Wait for registration to complete
+echo "Registering the Microsoft.App resource provider (needed for Container Apps)..."
+az provider register --namespace Microsoft.App
+
+echo "Registering the Microsoft.OperationalInsights resource provider (needed for Log Analytics)..."
+az provider register --namespace Microsoft.OperationalInsights
+
+echo "Waiting for registration to complete (this may take a few minutes)..."
+
+# Wait for Microsoft.Synapse registration to complete
 while [ "$(az provider show -n Microsoft.Synapse --query "registrationState" -o tsv)" != "Registered" ]; do
   echo "Still registering Microsoft.Synapse provider... (this can take several minutes)"
   sleep 10
 done
 echo "Microsoft.Synapse provider is now registered."
+
+# Wait for Microsoft.App registration to complete
+while [ "$(az provider show -n Microsoft.App --query "registrationState" -o tsv)" != "Registered" ]; do
+  echo "Still registering Microsoft.App provider... (this can take several minutes)"
+  sleep 10
+done
+echo "Microsoft.App provider is now registered."
+
+# Wait for Microsoft.OperationalInsights registration to complete
+while [ "$(az provider show -n Microsoft.OperationalInsights --query "registrationState" -o tsv)" != "Registered" ]; do
+  echo "Still registering Microsoft.OperationalInsights provider... (this can take several minutes)"
+  sleep 10
+done
+echo "Microsoft.OperationalInsights provider is now registered."
 
 # Verify that the resource group exists
 echo "Verifying resource group: $RESOURCE_GROUP"

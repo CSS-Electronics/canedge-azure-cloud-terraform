@@ -87,6 +87,10 @@ Replace:
 - `YOUR_DATABASE_NAME` with your desired Synapse database name (e.g. `database1`)
 - `CSS_GITHUB_TOKEN` with the github token provided by CSS Electronics
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake - interfaces/Azure)*
+
+> [!NOTE]  
+> Pay-as-you-go subscriptions are limited to 2 active Synapse workspaces and the deployment fails if you have reached this quota limit. In this case, remove any unused workspaces and deploy again
+
 ----------
 
 ## Troubleshooting
@@ -107,4 +111,5 @@ If you encounter issues with either deployment:
   | order by timestamp desc
   ```
 
+- If your Azure Job fails, wait 5 mins and go to 'Execution history/Logs/Console' for details
 - [Contact us](https://www.csselectronics.com/pages/contact-us) if you need deployment support
