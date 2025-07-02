@@ -12,6 +12,8 @@ This repository provides Terraform configurations to automate the deployment of 
 
 ### Setup Instructions
 
+![Azure Cloud Shell](http://canlogger1000.csselectronics.com/img/azure-console-setup-terraform-crop.png)
+
 1. Log in to [Azure](https://portal.azure.com/#home)
 3. Click on the Cloud Shell icon (>_) to open Cloud Shell (top right) and select 'Bash'
 4. Once Cloud Shell is open, run below command to clone this repository (paste via **ctrl+shift+v**):
