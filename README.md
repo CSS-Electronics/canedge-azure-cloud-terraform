@@ -47,7 +47,7 @@ Replace:
 Once you have an input container set up, you can optionally deploy the processing pipeline to automatically DBC decode uploaded MF4 files to Parquet format:
 
 ```bash
-chmod +x deploy_mdftoparquet.sh && ./deploy_mdftoparquet.sh  --subid YOUR_SUBSCRIPTION_ID --resourcegroup YOUR_RESOURCE_GROUP --storageaccount YOUR_STORAGE_ACCOUNT --container YOUR_INPUT_CONTAINER_NAME --id YOUR_UNIQUE_ID --email YOUR_EMAIL--zip YOUR_FUNCTION_ZIP
+chmod +x deploy_mdftoparquet.sh && ./deploy_mdftoparquet.sh  --subid YOUR_SUBSCRIPTION_ID --resourcegroup YOUR_RESOURCE_GROUP --storageaccount YOUR_STORAGE_ACCOUNT --container YOUR_INPUT_CONTAINER_NAME --id YOUR_UNIQUE_ID --email YOUR_EMAIL --zip YOUR_FUNCTION_ZIP
 
 ```
 
@@ -85,7 +85,7 @@ Replace:
 - `YOUR_RESOURCE_GROUP` with your input container resource group from step 1 (e.g. `canedge-resources`)
 - `YOUR_STORAGE_ACCOUNT` with your input storage account from step 1 (e.g. `canedgestorage1`)
 - `YOUR_INPUT_CONTAINER_NAME` with your input container name from step 1 (e.g. `canedge-test-container-20`)
-- `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`)
+- `YOUR_UNIQUE_ID` with your unique identifier from step 1 (e.g. `datalake1`)
 - `YOUR_DATABASE_NAME` with your desired Synapse database name (e.g. `database1`)
 - `CSS_GITHUB_TOKEN` with the github token provided by CSS Electronics
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake - interfaces/Azure)*
