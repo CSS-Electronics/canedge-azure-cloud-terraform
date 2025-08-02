@@ -296,26 +296,23 @@ module "monitoring" {
   ]
 }
 
-# Deploy the backlog processor container app job (if GitHub token provided)
-module "container_app_job_backlog" {
-  source = "./modules/container_app_job_backlog"
-  count  = var.github_token != "" ? 1 : 0
-  
+# Deploy Container App Job for Synapse table mapping
+module "container_app_job" {
+  source                = "./modules/container_app_job"
   resource_group_name   = var.resource_group_name
-  location              = var.location
+  location              = data.azurerm_resource_group.rg.location
+  unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
-  input_container_name  = var.input_container_name
   output_container_name = local.output_container_name
-  unique_id            = var.unique_id
-  github_token         = var.github_token
+  synapse_server        = module.synapse.synapse_workspace_endpoint
+  synapse_sql_password  = module.synapse.sql_password
+  github_token          = var.github_token
+  database_name         = var.database_name
   
+  # Add tags for resource management
   tags = {
-    deployedBy = "terraform"
-    purpose    = "mdf-backlog-processing"
-    uniqueId   = var.unique_id
+    Environment = "Production"
+    Application = "CANedge"
+    Component   = "SynapseTableMapper"
   }
-  
-  depends_on = [
-    azurerm_storage_container.output_container
-  ]
 }

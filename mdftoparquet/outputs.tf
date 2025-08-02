@@ -48,14 +48,12 @@ output "eventgrid_subscription_name" {
   value       = azurerm_eventgrid_system_topic_event_subscription.input_events.name
 }
 
-output "backlog_processor_job_name" {
-  description = "Name of the backlog processor container app job"
-  value       = var.github_token != "" ? module.container_app_job_backlog[0].container_app_job_name : "not-deployed"
-  sensitive   = true
+output "container_app_job_name" {
+  description = "Name of the Container App Job for Synapse table mapping"
+  value       = module.container_app_job.job_name
 }
 
-output "backlog_processor_environment_name" {
-  description = "Name of the backlog processor container app environment"
-  value       = var.github_token != "" ? module.container_app_job_backlog[0].container_app_environment_name : "not-deployed"
-  sensitive   = true
+output "container_app_job_execution_command" {
+  description = "Command to manually execute the Synapse table mapping job"
+  value       = module.container_app_job.execution_command
 }

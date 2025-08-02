@@ -17,6 +17,17 @@ resource "azurerm_container_app_environment" "job_env" {
   tags                       = var.tags
 }
 
+# Generate a secure master key password
+resource "random_password" "master_key" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+}
+
 # Get Storage Account Key for connection string
 data "azurerm_storage_account" "storage" {
   name                = var.storage_account_name
@@ -24,22 +35,17 @@ data "azurerm_storage_account" "storage" {
 }
 
 # Create Container App Job
-resource "azurerm_container_app_job" "backlog_processor" {
+resource "azurerm_container_app_job" "map_tables" {
   name                         = "${var.job_name}-${var.unique_id}"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
   tags                         = var.tags
   
-  # Required field - set to 15 minutes like the Synapse job
+  # Required field
   replica_timeout_in_seconds   = 900
   
-  # Configure retries to allow more attempts before backoff limit is reached
-  retry_policy {
-    max_retries = 3
-  }
-  
-  # Manual trigger config
+  # Manual trigger configuration
   manual_trigger_config {
     parallelism              = 1
     replica_completion_count = 1
@@ -54,8 +60,8 @@ resource "azurerm_container_app_job" "backlog_processor" {
   
   template {
     container {
-      name   = "mdf-backlog-processor"
-      image  = "ghcr.io/css-electronics/canedge-synapse-map-tables:latest"  # Using Synapse image instead
+      name   = "synapse-map-tables"
+      image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
       
@@ -74,20 +80,39 @@ resource "azurerm_container_app_job" "backlog_processor" {
         secret_name = "storage-connection-string"
       }
       
+      env {
+        name  = "SYNAPSE_SERVER"
+        value = var.synapse_server
+      }
+      
+      env {
+        name  = "SYNAPSE_PASSWORD"
+        secret_name = "synapse-password"
+      }
+      
+      env {
+        name  = "MASTER_KEY_PASSWORD"
+        secret_name = "master-key-password"
+      }
+      
       # Add debug environment variable
       env {
         name  = "DEBUG"
         value = "true"
       }
       
-      # Add minimal Synapse environment variables for testing only
+      # Define explicit command with debug flag
+      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u synapse-map-tables.py"]
+      
       env {
         name  = "SYNAPSE_DATABASE"
-        value = "canedge"
+        value = var.database_name
       }
       
-      # Use exact same command structure as working Synapse job
-      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u synapse-map-tables.py"]
+      env {
+        name  = "SYNAPSE_USER"
+        value = "sqladminuser"
+      }
     }
   }
   
@@ -97,11 +122,19 @@ resource "azurerm_container_app_job" "backlog_processor" {
     value = "DefaultEndpointsProtocol=https;AccountName=${var.storage_account_name};AccountKey=${data.azurerm_storage_account.storage.primary_access_key};EndpointSuffix=core.windows.net"
   }
   
+  secret {
+    name  = "synapse-password"
+    value = var.synapse_sql_password
+  }
+  
+  secret {
+    name  = "master-key-password"
+    value = random_password.master_key.result
+  }
+
   # GitHub Container Registry authentication token
   secret {
     name  = "github-token"
     value = var.github_token
   }
-  
-  # Secrets removed - not needed for the simplified test
 }

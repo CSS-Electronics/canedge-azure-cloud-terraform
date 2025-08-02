@@ -308,7 +308,7 @@ echo "Function App:         $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_name
 echo "Function App URL:     $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_url.value')"
 
 # Display backlog processor information
-echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
+# echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
 
 echo
 echo "The MDF-to-Parquet pipeline has been successfully deployed!"
