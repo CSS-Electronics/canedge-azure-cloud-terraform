@@ -75,8 +75,10 @@ resource "azurerm_container_app_job" "backlog_processor" {
         value = "true"
       }
       
-      # Define explicit command with debug flag
-      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u process_backlog_azure.py"]
+      # Let the container use its built-in settings from the Dockerfile
+      # - WORKDIR /app
+      # - ENV MF4_DECODER=/app/mdf2parquet_decode
+      # - ENTRYPOINT ["python", "process_backlog_azure.py"]
     }
   }
   
