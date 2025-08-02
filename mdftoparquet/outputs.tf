@@ -47,3 +47,13 @@ output "eventgrid_subscription_name" {
   description = "Name of the Event Grid Subscription"
   value       = azurerm_eventgrid_system_topic_event_subscription.input_events.name
 }
+
+output "backlog_processor_job_name" {
+  description = "Name of the Backlog Processor Container App Job (if deployed)"
+  value       = var.deploy_backlog_processor && var.github_token != "" ? module.container_app_job_backlog[0].container_app_job_name : "not-deployed"
+}
+
+output "backlog_processor_environment_name" {
+  description = "Name of the Backlog Processor Container App Environment (if deployed)"
+  value       = var.deploy_backlog_processor && var.github_token != "" ? module.container_app_job_backlog[0].container_app_environment_name : "not-deployed"
+}

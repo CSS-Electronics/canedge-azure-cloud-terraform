@@ -49,3 +49,10 @@ variable "function_app_name" {
   type        = string
   default     = ""
 }
+
+variable "github_token" {
+  description = "GitHub token for authenticating with GitHub Container Registry"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

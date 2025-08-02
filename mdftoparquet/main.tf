@@ -91,7 +91,7 @@ locals {
     "XDG_CACHE_HOME"                   = "/tmp/.cache"
     "AzureWebJobsStorage"               = data.azurerm_storage_account.existing.primary_connection_string
     "StorageConnectionString"           = data.azurerm_storage_account.existing.primary_connection_string
-    "InputContainerName"                = var.input_container_name
+    "INPUT_BUCKET"                      = var.input_container_name
     "OutputContainerName"               = local.output_container_name
     "NotificationEmail"                 = var.email_address
     "APPINSIGHTS_INSTRUMENTATIONKEY"    = azurerm_application_insights.insights.instrumentation_key
@@ -293,5 +293,29 @@ module "monitoring" {
   depends_on = [
     azurerm_linux_function_app.function_app,
     azurerm_application_insights.insights
+  ]
+}
+
+# Deploy the backlog processor container app job (if GitHub token provided)
+module "container_app_job_backlog" {
+  source = "./modules/container_app_job_backlog"
+  count  = var.github_token != "" ? 1 : 0
+  
+  resource_group_name   = var.resource_group_name
+  location              = var.location
+  storage_account_name  = var.storage_account_name
+  input_container_name  = var.input_container_name
+  output_container_name = local.output_container_name
+  unique_id            = var.unique_id
+  github_token         = var.github_token
+  
+  tags = {
+    deployedBy = "terraform"
+    purpose    = "mdf-backlog-processing"
+    uniqueId   = var.unique_id
+  }
+  
+  depends_on = [
+    azurerm_storage_container.output_container
   ]
 }

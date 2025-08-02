@@ -17,7 +17,8 @@ show_help() {
   echo "  -c, --container CONTAINER_NAME    Input container name (REQUIRED)"
   echo "  -i, --id UNIQUE_ID                Unique ID for resources (REQUIRED)"
   echo "  -e, --email EMAIL_ADDRESS         Email for notifications (REQUIRED)"
-  echo "  -z, --zip FUNCTION_ZIP_NAME       Function ZIP filename in input container (REQUIRED)"
+  echo "  --github-token TOKEN             GitHub token for backlog processor container job (REQUIRED)"
+  echo "  -z, --zip FUNCTION_ZIP_NAME       Function ZIP filename in input container (default: $DEFAULT_FUNCTION_ZIP)"
   # Output container is now automatically derived from input container name with '-parquet' suffix
   echo "  -f, --function FUNCTION_APP_NAME  Optional: custom function app name"
   echo "  -r, --region REGION               Azure region (default: same as storage account)"
@@ -34,6 +35,10 @@ AUTO_APPROVE="-auto-approve" # Auto-approve by default
 OUTPUT_CONTAINER="parquet"
 FUNCTION_APP_NAME=""
 REGION=""
+GITHUB_TOKEN=""
+# Default function zip name (easily updateable)
+DEFAULT_FUNCTION_ZIP="mdf-to-parquet-azure-function-v3.0.1.zip"
+FUNCTION_ZIP_NAME="$DEFAULT_FUNCTION_ZIP" # Set default value
 
 # Function to restart the Azure Function App after deployment
 restart_function_app() {
@@ -84,6 +89,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -r|--region)
       REGION="$2"
+      shift 2
+      ;;
+    --github-token)
+      GITHUB_TOKEN="$2"
       shift 2
       ;;
     -subid|--subid)
@@ -137,8 +146,9 @@ if [ -z "$EMAIL_ADDRESS" ]; then
   exit 1
 fi
 
-if [ -z "$FUNCTION_ZIP_NAME" ]; then
-  echo "Error: Function ZIP name is required. Please specify with --zip flag."
+# GitHub token is now mandatory
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "Error: GitHub token is required. Please specify with --github-token flag."
   show_help
   exit 1
 fi
@@ -232,6 +242,8 @@ echo "Function App Name:  $FUNCTION_APP_NAME"
 echo "Region:             $REGION"
 echo "Subscription ID:    $SUBSCRIPTION_ID"
 echo "Auto-Approve:       ${AUTO_APPROVE:1}"
+echo "GitHub Token:      Provided"
+echo "Function ZIP:       $FUNCTION_ZIP_NAME"
 echo "----------------------------------------------\n"
 
 # Create terraform/state/mdftoparquet directory in input container
@@ -260,7 +272,8 @@ terraform apply ${AUTO_APPROVE} \
   -var="unique_id=${UNIQUE_ID}" \
   -var="email_address=${EMAIL_ADDRESS}" \
   -var="function_zip_name=${FUNCTION_ZIP_NAME}" \
-  -var="function_app_name=${FUNCTION_APP_NAME}"
+  -var="function_app_name=${FUNCTION_APP_NAME}" \
+  -var="github_token=${GITHUB_TOKEN}"
 
 # Store exit code to check if deployment was successful
 TF_EXIT_CODE=$?
@@ -293,10 +306,22 @@ echo "Input Container:      $(echo $TERRAFORM_OUTPUT | jq -r '.input_container_n
 echo "Output Container:     $(echo $TERRAFORM_OUTPUT | jq -r '.output_container_name.value')"
 echo "Function App:         $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_name.value')"
 echo "Function App URL:     $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_url.value')"
+
+# Display backlog processor information
+echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
+echo "Backlog Env:          $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_environment_name.value')"
+
 echo
 echo "The MDF-to-Parquet pipeline has been successfully deployed!"
 echo "Any MF4 files uploaded to the input container will be automatically processed to Parquet format and stored in the output container."
 echo "Notifications will be sent to: $EMAIL_ADDRESS"
+
+# Display information about the backlog processor
+echo
+echo "BACKLOG PROCESSOR: The backlog processor container app job has been deployed."
+echo "You can manually trigger batch processing of historical log files from the Azure Portal:"
+echo "  1. Go to Container Apps > ${UNIQUE_ID}-mdf-backlog-processor > Jobs"
+echo "  2. Click 'Execute' to start batch processing"
 echo
 echo "IMPORTANT: If using a non-Azure AD email address for notifications, you must verify it:"
 echo "  1. Go to Azure Portal > Monitor > Action Groups"
