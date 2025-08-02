@@ -300,14 +300,14 @@ module "monitoring" {
 module "container_app_job" {
   source                = "./modules/container_app_job"
   resource_group_name   = var.resource_group_name
-  location              = var.location
+  location              = data.azurerm_resource_group.rg.location
   unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
   output_container_name = local.output_container_name
-  synapse_server        = "synapse-newplayground-ondemand.sql.azuresynapse.net"
-  synapse_sql_password  = var.github_token  # Using GitHub token temporarily since we don't have a synapse password var
+  synapse_server        = module.synapse.synapse_workspace_endpoint
+  synapse_sql_password  = module.synapse.sql_password
   github_token          = var.github_token
-  database_name         = "tempdatabase"
+  database_name         = var.database_name
   
   # Add tags for resource management
   tags = {
