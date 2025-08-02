@@ -50,7 +50,7 @@ resource "azurerm_container_app_job" "backlog_processor" {
   template {
     container {
       name   = "mdf-backlog-processor"
-      image  = var.container_image
+      image  = "ghcr.io/css-electronics/canedge-synapse-map-tables:latest"  # Using Synapse image instead
       cpu    = var.cpu
       memory = var.memory
       
@@ -75,10 +75,34 @@ resource "azurerm_container_app_job" "backlog_processor" {
         value = "true"
       }
       
-      # Let the container use its built-in settings from the Dockerfile
-      # - WORKDIR /app
-      # - ENV MF4_DECODER=/app/mdf2parquet_decode
-      # - ENTRYPOINT ["python", "process_backlog_azure.py"]
+      # Add required Synapse environment variables
+      env {
+        name  = "SYNAPSE_DATABASE"
+        value = "canedge"
+      }
+      
+      env {
+        name  = "SYNAPSE_SERVER"
+        value = "test-synapse-server.database.windows.net"
+      }
+      
+      env {
+        name  = "SYNAPSE_USER"
+        value = "sqladminuser"
+      }
+      
+      env {
+        name  = "SYNAPSE_PASSWORD"
+        secret_name = "synapse-password"
+      }
+      
+      env {
+        name  = "MASTER_KEY_PASSWORD"
+        secret_name = "master-key-password"
+      }
+      
+      # Add command for the Synapse container
+      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u synapse-map-tables.py"]
     }
   }
   
@@ -92,5 +116,17 @@ resource "azurerm_container_app_job" "backlog_processor" {
   secret {
     name  = "github-token"
     value = var.github_token
+  }
+  
+  # Synapse password (test value for debugging)
+  secret {
+    name  = "synapse-password"
+    value = "placeholder-password"
+  }
+  
+  # Master key password (random generated value)
+  secret {
+    name  = "master-key-password"
+    value = "placeholder-master-key"
   }
 }
