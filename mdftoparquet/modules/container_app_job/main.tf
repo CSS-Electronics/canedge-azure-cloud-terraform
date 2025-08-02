@@ -60,7 +60,7 @@ resource "azurerm_container_app_job" "map_tables" {
   
   template {
     container {
-      name   = "synapse-map-tables"
+      name   = "process-backlog"
       image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
