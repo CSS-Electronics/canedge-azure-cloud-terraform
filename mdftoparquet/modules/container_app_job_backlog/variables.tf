@@ -37,7 +37,7 @@ variable "tags" {
 variable "job_name" {
   description = "Name of the container app job"
   type        = string
-  default     = "mdf-backlog-processor"
+  default     = "process-backlog"
 }
 
 variable "container_image" {
