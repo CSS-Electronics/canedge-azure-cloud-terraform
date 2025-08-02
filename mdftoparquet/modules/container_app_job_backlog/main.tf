@@ -31,8 +31,13 @@ resource "azurerm_container_app_job" "backlog_processor" {
   location                     = var.location
   tags                         = var.tags
   
-  # Required field - set to 1 hour to allow for long-running processing
-  replica_timeout_in_seconds   = 3600
+  # Required field - set to 15 minutes like the Synapse job
+  replica_timeout_in_seconds   = 900
+  
+  # Configure retries to allow more attempts before backoff limit is reached
+  retry_policy {
+    max_retries = 3
+  }
   
   # Manual trigger config
   manual_trigger_config {
@@ -60,12 +65,12 @@ resource "azurerm_container_app_job" "backlog_processor" {
       }
       
       env {
-        name  = "INPUT_BUCKET"
-        value = var.input_container_name
+        name  = "CONTAINER_OUTPUT"
+        value = var.output_container_name
       }
       
       env {
-        name  = "StorageConnectionString"
+        name  = "STORAGE_CONNECTION_STRING"
         secret_name = "storage-connection-string"
       }
       
@@ -75,33 +80,13 @@ resource "azurerm_container_app_job" "backlog_processor" {
         value = "true"
       }
       
-      # Add required Synapse environment variables
+      # Add minimal Synapse environment variables for testing only
       env {
         name  = "SYNAPSE_DATABASE"
         value = "canedge"
       }
       
-      env {
-        name  = "SYNAPSE_SERVER"
-        value = "test-synapse-server.database.windows.net"
-      }
-      
-      env {
-        name  = "SYNAPSE_USER"
-        value = "sqladminuser"
-      }
-      
-      env {
-        name  = "SYNAPSE_PASSWORD"
-        secret_name = "synapse-password"
-      }
-      
-      env {
-        name  = "MASTER_KEY_PASSWORD"
-        secret_name = "master-key-password"
-      }
-      
-      # Add command for the Synapse container
+      # Use exact same command structure as working Synapse job
       command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u synapse-map-tables.py"]
     }
   }
@@ -118,15 +103,5 @@ resource "azurerm_container_app_job" "backlog_processor" {
     value = var.github_token
   }
   
-  # Synapse password (test value for debugging)
-  secret {
-    name  = "synapse-password"
-    value = "placeholder-password"
-  }
-  
-  # Master key password (random generated value)
-  secret {
-    name  = "master-key-password"
-    value = "placeholder-master-key"
-  }
+  # Secrets removed - not needed for the simplified test
 }
