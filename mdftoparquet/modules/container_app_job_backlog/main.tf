@@ -65,7 +65,7 @@ resource "azurerm_container_app_job" "backlog_processor" {
       }
       
       env {
-        name  = "STORAGE_CONNECTION_STRING"
+        name  = "StorageConnectionString"
         secret_name = "storage-connection-string"
       }
       
@@ -76,7 +76,7 @@ resource "azurerm_container_app_job" "backlog_processor" {
       }
       
       # Define explicit command with debug flag
-      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u main.py"]
+      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u process_backlog_azure.py"]
     }
   }
   

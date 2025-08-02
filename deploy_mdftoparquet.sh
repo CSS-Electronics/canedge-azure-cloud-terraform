@@ -309,7 +309,6 @@ echo "Function App URL:     $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_url.
 
 # Display backlog processor information
 echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
-echo "Backlog Env:          $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_environment_name.value')"
 
 echo
 echo "The MDF-to-Parquet pipeline has been successfully deployed!"
@@ -320,7 +319,7 @@ echo "Notifications will be sent to: $EMAIL_ADDRESS"
 echo
 echo "BACKLOG PROCESSOR: The backlog processor container app job has been deployed."
 echo "You can manually trigger batch processing of historical log files from the Azure Portal:"
-echo "  1. Go to Container Apps > ${UNIQUE_ID}-mdf-backlog-processor > Jobs"
+echo "  1. Go to Container Apps > process-backlog-${UNIQUE_ID} > Jobs"
 echo "  2. Click 'Execute' to start batch processing"
 echo
 echo "IMPORTANT: If using a non-Azure AD email address for notifications, you must verify it:"
