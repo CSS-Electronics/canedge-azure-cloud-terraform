@@ -145,20 +145,13 @@ resource "azurerm_monitor_diagnostic_setting" "container_app_job_logs" {
   target_resource_id         = azurerm_container_app_job.map_tables.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
 
+  # Use only supported log categories for Container App Jobs
   enabled_log {
-    category = "JobExecutionLogs"
+    category_group = "allLogs"
   }
 
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
-
-  enabled_log {
-    category = "ContainerAppSystemLogs"
-  }
-
-  metric {
+  # Use enabled_metric instead of the deprecated metric block
+  enabled_metric {
     category = "AllMetrics"
-    enabled  = true
   }
 }
