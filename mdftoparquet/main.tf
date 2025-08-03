@@ -304,10 +304,10 @@ module "container_app_job" {
   unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
   output_container_name = local.output_container_name
-  synapse_server        = "synapse-newplayground-ondemand.sql.azuresynapse.net"
+  synapse_server        = "synapse-newplayground.sql.azuresynapse.net"
   synapse_sql_password  = var.github_token  # Using GitHub token temporarily since we don't have a synapse password var
   github_token          = var.github_token
-  database_name         = "tempdatabase"
+  database_name         = "playgrounddb"
   
   # Add tags for resource management
   tags = {

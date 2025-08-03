@@ -190,6 +190,15 @@ else
   echo "✓ Subscription set successfully"
 fi
 
+
+# Register required resource providers
+echo "Registering the Microsoft.App resource provider (needed for Container Apps)..."
+az provider register --namespace Microsoft.App
+
+echo "Registering the Microsoft.OperationalInsights resource provider (needed for Log Analytics)..."
+az provider register --namespace Microsoft.OperationalInsights
+
+
 # Check if storage account exists and function zip file is in the container
 echo "Verifying storage account and function ZIP file..."
 STORAGE_ACCOUNT=$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" 2>/dev/null)
