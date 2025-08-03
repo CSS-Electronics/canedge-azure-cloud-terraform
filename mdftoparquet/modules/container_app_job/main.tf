@@ -8,16 +8,12 @@ resource "azurerm_log_analytics_workspace" "container_app" {
   tags                = var.tags
 }
 
-# Create Container App Environment with explicit log configuration
+# Create Container App Environment with Log Analytics workspace
 resource "azurerm_container_app_environment" "job_env" {
   name                       = "env-${var.job_name}${var.unique_id}"
   location                   = var.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
-  
-  # Enable internal logging for the environment
-  log_analytics_destination_type = "log-analytics"
-  
   tags                       = var.tags
 }
 
@@ -149,9 +145,13 @@ resource "azurerm_monitor_diagnostic_setting" "container_app_env_logs" {
   target_resource_id         = azurerm_container_app_environment.job_env.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
 
-  # Enable all logs for the environment which will include job logs
+  # Enable specific log categories for Container App Environment
   enabled_log {
-    category_group = "allLogs"
+    category = "ContainerAppConsoleLogs"
+  }
+  
+  enabled_log {
+    category = "ContainerAppSystemLogs"
   }
 
   # Use enabled_metric instead of the deprecated metric block
