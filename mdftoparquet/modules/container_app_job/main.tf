@@ -138,3 +138,27 @@ resource "azurerm_container_app_job" "map_tables" {
     value = var.github_token
   }
 }
+
+# Add diagnostic settings to send logs to Log Analytics
+resource "azurerm_monitor_diagnostic_setting" "container_app_job_logs" {
+  name                       = "job-logs-${var.job_name}${var.unique_id}"
+  target_resource_id         = azurerm_container_app_job.map_tables.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
+
+  enabled_log {
+    category = "JobExecutionLogs"
+  }
+
+  enabled_log {
+    category = "ContainerAppConsoleLogs"
+  }
+
+  enabled_log {
+    category = "ContainerAppSystemLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
