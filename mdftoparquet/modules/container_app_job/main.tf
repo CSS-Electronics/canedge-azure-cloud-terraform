@@ -8,12 +8,16 @@ resource "azurerm_log_analytics_workspace" "container_app" {
   tags                = var.tags
 }
 
-# Create Container App Environment
+# Create Container App Environment with explicit log configuration
 resource "azurerm_container_app_environment" "job_env" {
   name                       = "env-${var.job_name}${var.unique_id}"
   location                   = var.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
+  
+  # Enable internal logging for the environment
+  log_analytics_destination_type = "log-analytics"
+  
   tags                       = var.tags
 }
 
@@ -139,13 +143,13 @@ resource "azurerm_container_app_job" "map_tables" {
   }
 }
 
-# Add diagnostic settings to send logs to Log Analytics
-resource "azurerm_monitor_diagnostic_setting" "container_app_job_logs" {
-  name                       = "job-logs-${var.job_name}${var.unique_id}"
-  target_resource_id         = azurerm_container_app_job.map_tables.id
+# Add diagnostic settings to the Container App Environment instead of directly to the Job
+resource "azurerm_monitor_diagnostic_setting" "container_app_env_logs" {
+  name                       = "env-logs-${var.job_name}${var.unique_id}"
+  target_resource_id         = azurerm_container_app_environment.job_env.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
 
-  # Use only supported log categories for Container App Jobs
+  # Enable all logs for the environment which will include job logs
   enabled_log {
     category_group = "allLogs"
   }
