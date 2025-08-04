@@ -15,16 +15,6 @@ resource "azurerm_container_app_environment" "job_env" {
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
   tags                       = var.tags
-  
-  # Enable logging for Container Apps
-  infrastructure_subnet_id = null
-  internal_load_balancer_enabled = false
-  
-  # Workload profiles for better resource allocation
-  workload_profile {
-    name                  = "Consumption"
-    workload_profile_type = "Consumption"
-  }
 }
 
 # Generate a secure master key password
