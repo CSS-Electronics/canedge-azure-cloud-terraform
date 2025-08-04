@@ -1,0 +1,2 @@
+# Minimal requirements for test container
+# No external dependencies needed for basic logging

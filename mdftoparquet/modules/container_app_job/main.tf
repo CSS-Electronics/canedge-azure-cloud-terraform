@@ -60,7 +60,7 @@ resource "azurerm_container_app_job" "map_tables" {
   
   template {
     container {
-      name   = "synapse-map-tables"
+      name   = "test-container"
       image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
@@ -101,8 +101,8 @@ resource "azurerm_container_app_job" "map_tables" {
         value = "true"
       }
       
-      # Define explicit command with debug flag
-      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u synapse-map-tables.py"]
+      # Define explicit command to run our test script
+      command = ["python", "-u", "test_container.py"]
       
       env {
         name  = "SYNAPSE_DATABASE"
