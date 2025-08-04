@@ -144,27 +144,8 @@ resource "azurerm_container_app_job" "map_tables" {
   }
 }
 
-# Create diagnostic settings for Container App Job to ensure logs are sent to Log Analytics
-resource "azurerm_monitor_diagnostic_setting" "container_app_job_logs" {
-  name                       = "diag-${var.job_name}-${var.unique_id}"
-  target_resource_id         = azurerm_container_app_job.map_tables.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
-  
-  # Enable all available log categories
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
-  
-  enabled_log {
-    category = "ContainerAppSystemLogs"
-  }
-  
-  # Enable metrics
-  metric {
-    category = "AllMetrics"
-    enabled  = true
-  }
-}
+# Note: Container App Jobs automatically send logs to the associated Log Analytics workspace
+# through the Container App Environment configuration. No additional diagnostic settings are needed.
 
 # Assign Log Analytics Contributor role to Container App Job system identity
 resource "azurerm_role_assignment" "container_app_log_analytics" {

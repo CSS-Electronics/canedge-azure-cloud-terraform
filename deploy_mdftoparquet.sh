@@ -344,9 +344,10 @@ echo "Log Analytics Workspace: $(echo $TERRAFORM_OUTPUT | jq -r '.log_analytics_
 echo "To view Container App logs, go to Azure Portal > Log Analytics workspaces > $(echo $TERRAFORM_OUTPUT | jq -r '.log_analytics_workspace_name.value') > Logs"
 echo
 echo "Sample KQL queries to check logs:"
-echo "  Console Logs: ContainerAppConsoleLogs_CL | where ContainerName_s == 'test-container' | order by TimeGenerated desc"
-echo "  System Logs:  ContainerAppSystemLogs_CL | where ContainerAppName_s contains 'synapse-map-tables' | order by TimeGenerated desc"
-echo "  All Logs:     union ContainerAppConsoleLogs_CL, ContainerAppSystemLogs_CL | order by TimeGenerated desc"
+echo "  Console Logs: ContainerAppConsoleLogs | where ContainerName == 'test-container' | order by TimeGenerated desc"
+echo "  System Logs:  ContainerAppSystemLogs | where ContainerAppName contains 'synapse-map-tables' | order by TimeGenerated desc"
+echo "  All Logs:     union ContainerAppConsoleLogs, ContainerAppSystemLogs | order by TimeGenerated desc"
+echo "  (If above tables don't exist, try with _CL suffix: ContainerAppConsoleLogs_CL, ContainerAppSystemLogs_CL)"
 echo
 
 # Restart the function app to ensure changes are recognized
