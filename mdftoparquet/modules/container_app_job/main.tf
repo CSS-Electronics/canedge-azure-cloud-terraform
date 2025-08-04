@@ -1,6 +1,6 @@
 # Create a Log Analytics workspace for Container App logs
 resource "azurerm_log_analytics_workspace" "container_app" {
-  name                = "log-${var.job_name}${var.unique_id}"
+  name                = "log-${var.job_name}-${var.unique_id}"
   location            = var.location
   resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
@@ -8,9 +8,9 @@ resource "azurerm_log_analytics_workspace" "container_app" {
   tags                = var.tags
 }
 
-# Create Container App Environment with Log Analytics workspace
+# Create Container App Environment
 resource "azurerm_container_app_environment" "job_env" {
-  name                       = "env-${var.job_name}${var.unique_id}"
+  name                       = "env-${var.job_name}-${var.unique_id}"
   location                   = var.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
@@ -36,7 +36,7 @@ data "azurerm_storage_account" "storage" {
 
 # Create Container App Job
 resource "azurerm_container_app_job" "map_tables" {
-  name                         = "${var.job_name}${var.unique_id}"
+  name                         = "${var.job_name}-${var.unique_id}"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
@@ -136,26 +136,5 @@ resource "azurerm_container_app_job" "map_tables" {
   secret {
     name  = "github-token"
     value = var.github_token
-  }
-}
-
-# Add diagnostic settings to the Container App Environment instead of directly to the Job
-resource "azurerm_monitor_diagnostic_setting" "container_app_env_logs" {
-  name                       = "env-logs-${var.job_name}${var.unique_id}"
-  target_resource_id         = azurerm_container_app_environment.job_env.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
-
-  # Enable specific log categories for Container App Environment
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
-  
-  enabled_log {
-    category = "ContainerAppSystemLogs"
-  }
-
-  # Use enabled_metric instead of the deprecated metric block
-  enabled_metric {
-    category = "AllMetrics"
   }
 }
