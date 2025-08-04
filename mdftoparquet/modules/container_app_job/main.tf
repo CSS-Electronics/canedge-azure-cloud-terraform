@@ -45,11 +45,6 @@ resource "azurerm_container_app_job" "map_tables" {
   # Required field
   replica_timeout_in_seconds   = 900
   
-  # Enable system identity for Log Analytics access
-  identity {
-    type = "SystemAssigned"
-  }
-  
   # Manual trigger configuration
   manual_trigger_config {
     parallelism              = 1
@@ -145,13 +140,5 @@ resource "azurerm_container_app_job" "map_tables" {
 }
 
 # Note: Container App Jobs automatically send logs to the associated Log Analytics workspace
-# through the Container App Environment configuration. No additional diagnostic settings are needed.
-
-# Assign Log Analytics Contributor role to Container App Job system identity
-resource "azurerm_role_assignment" "container_app_log_analytics" {
-  scope                = azurerm_log_analytics_workspace.container_app.id
-  role_definition_name = "Log Analytics Contributor"
-  principal_id         = azurerm_container_app_job.map_tables.identity[0].principal_id
-  
-  depends_on = [azurerm_container_app_job.map_tables]
-}
+# through the Container App Environment configuration. No additional diagnostic settings or
+# role assignments are needed for basic logging functionality.
