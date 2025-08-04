@@ -8,13 +8,23 @@ resource "azurerm_log_analytics_workspace" "container_app" {
   tags                = var.tags
 }
 
-# Create Container App Environment
+# Create Container App Environment with proper logging configuration
 resource "azurerm_container_app_environment" "job_env" {
   name                       = "env-${var.job_name}-${var.unique_id}"
   location                   = var.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
   tags                       = var.tags
+  
+  # Enable logging for Container Apps
+  infrastructure_subnet_id = null
+  internal_load_balancer_enabled = false
+  
+  # Workload profiles for better resource allocation
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
 }
 
 # Generate a secure master key password
@@ -44,6 +54,11 @@ resource "azurerm_container_app_job" "map_tables" {
   
   # Required field
   replica_timeout_in_seconds   = 900
+  
+  # Enable system identity for Log Analytics access
+  identity {
+    type = "SystemAssigned"
+  }
   
   # Manual trigger configuration
   manual_trigger_config {
@@ -137,4 +152,35 @@ resource "azurerm_container_app_job" "map_tables" {
     name  = "github-token"
     value = var.github_token
   }
+}
+
+# Create diagnostic settings for Container App Job to ensure logs are sent to Log Analytics
+resource "azurerm_monitor_diagnostic_setting" "container_app_job_logs" {
+  name                       = "diag-${var.job_name}-${var.unique_id}"
+  target_resource_id         = azurerm_container_app_job.map_tables.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.container_app.id
+  
+  # Enable all available log categories
+  enabled_log {
+    category = "ContainerAppConsoleLogs"
+  }
+  
+  enabled_log {
+    category = "ContainerAppSystemLogs"
+  }
+  
+  # Enable metrics
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+# Assign Log Analytics Contributor role to Container App Job system identity
+resource "azurerm_role_assignment" "container_app_log_analytics" {
+  scope                = azurerm_log_analytics_workspace.container_app.id
+  role_definition_name = "Log Analytics Contributor"
+  principal_id         = azurerm_container_app_job.map_tables.identity[0].principal_id
+  
+  depends_on = [azurerm_container_app_job.map_tables]
 }

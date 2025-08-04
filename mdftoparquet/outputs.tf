@@ -54,6 +54,21 @@ output "container_app_job_name" {
 }
 
 output "container_app_job_execution_command" {
-  description = "Command to manually execute the Synapse table mapping job"
+  description = "Command to execute the Container App Job"
   value       = module.container_app_job.execution_command
+}
+
+output "log_analytics_workspace_name" {
+  description = "Log Analytics Workspace name for Container App logs"
+  value       = module.container_app_job.log_analytics_workspace_name
+}
+
+output "log_analytics_workspace_id" {
+  description = "Log Analytics Workspace ID for Container App logs"
+  value       = module.container_app_job.log_analytics_workspace_id
+}
+
+output "log_query_commands" {
+  description = "KQL queries to check Container App logs in Log Analytics"
+  value       = module.container_app_job.log_query_commands
 }
