@@ -16,7 +16,7 @@ variable "unique_id" {
 variable "job_name" {
   description = "Name of the Container App Job"
   type        = string
-  default     = "synapse-map-tables"
+  default     = "jobtest"
 }
 
 variable "container_image" {
