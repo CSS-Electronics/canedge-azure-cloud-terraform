@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Deployment script for backlog processing resources
-# This script deploys resources for processing a backlog of data in Synapse
+# Deployment script for Azure Synapse resources
+# This script deploys Synapse resources for querying Parquet data in Azure
 
 # Default values
 SUBSCRIPTION_ID=""
@@ -9,6 +9,7 @@ RESOURCE_GROUP=""
 STORAGE_ACCOUNT=""
 INPUT_CONTAINER=""
 UNIQUE_ID=""
+DATABASE_NAME=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -40,6 +41,11 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
 
+    --database)
+      DATABASE_NAME="$2"
+      shift
+      shift
+      ;;
     --github-token)
       GITHUB_TOKEN="$2"
       shift
@@ -139,6 +145,23 @@ if [ $? -ne 0 ]; then
 fi
 echo "Input container $INPUT_CONTAINER exists"
 
+# Verify that the output container (created by MDF-to-Parquet) exists
+OUTPUT_CONTAINER="${INPUT_CONTAINER}-parquet"
+echo "Verifying output container: $OUTPUT_CONTAINER"
+az storage container show --name "$OUTPUT_CONTAINER" --account-name "$STORAGE_ACCOUNT" --auth-mode login > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Error: Output container $OUTPUT_CONTAINER does not exist in storage account $STORAGE_ACCOUNT"
+  echo "Make sure you've run the MDF-to-Parquet deployment first."
+  exit 1
+fi
+echo "Output container $OUTPUT_CONTAINER exists"
+
+
+
+if [[ -z "$DATABASE_NAME" ]]; then
+  DATABASE_NAME="canedge"
+  echo "Using default dataset name: $DATABASE_NAME"
+fi
 
 # Auto-detect the current user's email address using Azure CLI
 echo "Detecting current user's email address..."
@@ -162,11 +185,12 @@ echo "  Resource Group:  $RESOURCE_GROUP"
 echo "  Storage Account: $STORAGE_ACCOUNT"
 echo "  Input Container: $INPUT_CONTAINER"
 echo "  Unique ID:       $UNIQUE_ID"
+echo "  Database Name:   $DATABASE_NAME"
 echo "  Admin Email:     $ADMIN_EMAIL"
 [[ -n "$GITHUB_TOKEN" ]] && echo "  GitHub Token:    Provided" || echo "  GitHub Token:    Not provided (public image required)"
 echo "========================================================"
 
-# Navigate to the relevant terraform directory
+# Navigate to the synapse terraform directory
 cd "$(dirname "$0")/jobtest"
 
 # Set up Terraform state storage in the input container
@@ -190,6 +214,7 @@ storage_account_name = "$STORAGE_ACCOUNT"
 input_container_name = "$INPUT_CONTAINER"
 unique_id = "$UNIQUE_ID"
 github_token = "$GITHUB_TOKEN"
+database_name = "$DATABASE_NAME"
 EOF
 
 # Set environment variables for Terraform to use
@@ -198,6 +223,7 @@ export TF_VAR_resource_group_name="$RESOURCE_GROUP"
 export TF_VAR_storage_account_name="$STORAGE_ACCOUNT"
 export TF_VAR_input_container_name="$INPUT_CONTAINER"
 export TF_VAR_unique_id="$UNIQUE_ID"
+export TF_VAR_database_name="$DATABASE_NAME"
 export TF_IN_AUTOMATION="true"  # This prevents interactive prompts
 
 # Construct the Azure resource ID for the filesystem
@@ -228,6 +254,7 @@ terraform apply -auto-approve \
   -var "storage_account_name=$STORAGE_ACCOUNT" \
   -var "input_container_name=$INPUT_CONTAINER" \
   -var "unique_id=$UNIQUE_ID" \
+  -var "database_name=$DATABASE_NAME" \
   -var "admin_email=$ADMIN_EMAIL"
 
 TERRAFORM_EXIT_CODE=$?
@@ -246,7 +273,7 @@ fi
 if [ $TERRAFORM_EXIT_CODE -eq 0 ]; then
   # Show Container App Job information
   echo "======================================================="
-  echo "Backlog Processor deployment completed successfully"
+  echo "Synapse deployment completed successfully"
   echo "======================================================="
   exit 0
 else
