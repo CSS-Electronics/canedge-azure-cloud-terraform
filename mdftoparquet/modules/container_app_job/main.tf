@@ -25,7 +25,7 @@ data "azurerm_storage_account" "existing" {
 
 # Create Container App Job
 resource "azurerm_container_app_job" "process_backlog" {
-  name                         = "backlog"
+  name                         = "backlog-${var.unique_id}"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
@@ -49,7 +49,7 @@ resource "azurerm_container_app_job" "process_backlog" {
   
   template {
     container {
-      name   = "backlog"
+      name   = "backlog-${var.unique_id}"
       image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
