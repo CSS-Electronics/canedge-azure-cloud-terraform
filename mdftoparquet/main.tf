@@ -296,23 +296,19 @@ module "monitoring" {
   ]
 }
 
-# Deploy Container App Job for Synapse table mapping
+# Deploy Container App Job for Backlog Processor
 module "container_app_job" {
   source                = "./modules/container_app_job"
   resource_group_name   = var.resource_group_name
   location              = var.location
   unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
-  output_container_name = local.output_container_name
-  synapse_server        = "synapse-newplayground.sql.azuresynapse.net"
-  synapse_sql_password  = "sql_password"
   github_token          = var.github_token
-  database_name         = "playgrounddb"
   
   # Add tags for resource management
   tags = {
     Environment = "Production"
     Application = "CANedge"
-    Component   = "SynapseTableMapper"
+    Component   = "BacklogProcessor"
   }
 }
