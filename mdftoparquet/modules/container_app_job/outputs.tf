@@ -3,6 +3,11 @@ output "job_name" {
   value       = azurerm_container_app_job.process_backlog.name
 }
 
+output "log_analytics_id" {
+  description = "ID of the Log Analytics workspace"
+  value       = azurerm_log_analytics_workspace.container_app.id
+}
+
 output "resource_group_name" {
   description = "Resource group where the job is deployed"
   value       = var.resource_group_name

@@ -161,6 +161,14 @@ resource "azurerm_application_insights" "insights" {
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
+  workspace_id        = module.container_app_job.log_analytics_id
+  
+  # Prevent Terraform from trying to remove workspace_id
+  lifecycle {
+    ignore_changes = [
+      workspace_id
+    ]
+  }
 }
 
 # Create SAS token for accessing the function ZIP
