@@ -161,8 +161,6 @@ resource "azurerm_application_insights" "insights" {
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
-  # Using the Log Analytics workspace ID from the container app module
-  workspace_id        = module.container_app_job.log_analytics_id
   
   # Prevent destruction of existing insights
   lifecycle {
@@ -171,8 +169,7 @@ resource "azurerm_application_insights" "insights" {
       name,
       location,
       resource_group_name,
-      application_type,
-      workspace_id
+      application_type
     ]
   }
 }
