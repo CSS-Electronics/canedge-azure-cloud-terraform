@@ -40,7 +40,7 @@ locals {
 
 resource "azurerm_storage_container" "output_container" {
   name                  = local.output_container_name
-  storage_account_id    = data.azurerm_storage_account.existing.id
+  storage_account_name  = data.azurerm_storage_account.existing.name
   container_access_type = "private"
   
   # Prevent destruction of existing container
@@ -48,7 +48,7 @@ resource "azurerm_storage_container" "output_container" {
     prevent_destroy = true
     ignore_changes = [
       name,
-      storage_account_id,
+      storage_account_name,
       container_access_type
     ]
   }
