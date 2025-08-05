@@ -233,6 +233,29 @@ if [ $TERRAFORM_EXIT_CODE -ne 0 ]; then
   exit 1
 else
   echo "Terraform apply succeeded!"
+  
+  # Get the container app job's principal ID and log analytics workspace ID from Terraform outputs
+  echo "Getting container app job's managed identity and Log Analytics workspace information..."
+  PRINCIPAL_ID=$(terraform output -raw module.container_app_job.job_principal_id 2>/dev/null)
+  LOG_ANALYTICS_ID=$(terraform output -raw module.container_app_job.log_analytics_id 2>/dev/null)
+  
+  # Check if we have both required IDs
+  if [ -n "$PRINCIPAL_ID" ] && [ -n "$LOG_ANALYTICS_ID" ]; then
+    echo "Assigning Log Analytics Contributor role to container app job's managed identity..."
+    az role assignment create \
+      --assignee-object-id "$PRINCIPAL_ID" \
+      --assignee-principal-type ServicePrincipal \
+      --role "Log Analytics Contributor" \
+      --scope "$LOG_ANALYTICS_ID"
+    
+    if [ $? -eq 0 ]; then
+      echo "✅ Log Analytics permissions successfully assigned to container app job."
+    else
+      echo "⚠️ Failed to assign Log Analytics permissions. Logs may not appear correctly."
+    fi
+  else
+    echo "⚠️ Could not retrieve managed identity or Log Analytics information. Skipping role assignment."
+  fi
 fi
 
 

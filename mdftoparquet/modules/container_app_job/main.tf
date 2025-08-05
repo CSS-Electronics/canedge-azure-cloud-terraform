@@ -31,6 +31,11 @@ resource "azurerm_container_app_job" "process_backlog" {
   location                     = var.location
   tags                         = var.tags
   
+  # Add system-assigned identity for logging permissions
+  identity {
+    type = "SystemAssigned"
+  }
+  
   # Required field
   replica_timeout_in_seconds   = 3600
   
@@ -81,4 +86,18 @@ resource "azurerm_container_app_job" "process_backlog" {
     name  = "github-token"
     value = var.github_token
   }
+}
+
+# Output the identity principal ID so it can be used in a separate apply
+output "job_principal_id" {
+  value       = azurerm_container_app_job.process_backlog.identity.0.principal_id
+  description = "The principal ID of the system-assigned identity for the container app job"
+  # This will only be available after the container app is created
+  depends_on = [azurerm_container_app_job.process_backlog]
+}
+
+# Output the log analytics workspace ID for use in a separate apply
+output "log_analytics_id" {
+  value       = azurerm_log_analytics_workspace.container_app.id
+  description = "The ID of the Log Analytics workspace"
 }

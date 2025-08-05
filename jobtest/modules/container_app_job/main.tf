@@ -88,9 +88,16 @@ resource "azurerm_container_app_job" "process_backlog" {
   }
 }
 
-# Grant Log Analytics Contributor permissions to the container app job's system-assigned identity
-resource "azurerm_role_assignment" "container_app_log_analytics" {
-  scope                = azurerm_log_analytics_workspace.container_app.id
-  role_definition_name = "Log Analytics Contributor"
-  principal_id         = azurerm_container_app_job.process_backlog.identity[0].principal_id
+# Output the identity principal ID so it can be used in a separate apply
+output "job_principal_id" {
+  value       = azurerm_container_app_job.process_backlog.identity.0.principal_id
+  description = "The principal ID of the system-assigned identity for the container app job"
+  # This will only be available after the container app is created
+  depends_on = [azurerm_container_app_job.process_backlog]
+}
+
+# Output the log analytics workspace ID for use in a separate apply
+output "log_analytics_id" {
+  value       = azurerm_log_analytics_workspace.container_app.id
+  description = "The ID of the Log Analytics workspace"
 }
