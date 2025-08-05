@@ -22,7 +22,7 @@ variable "job_name" {
 variable "container_image" {
   description = "Container image to use for the job"
   type        = string
-  default     = "ghcr.io/css-electronics/backlog-processor-azure-container:latest"
+  default     = "ghcr.io/css-electronics/canedge-mdftoparquet-automation:latest"
 }
 
 variable "storage_account_name" {
