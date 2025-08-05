@@ -23,13 +23,20 @@ variable "unique_id" {
   type        = string
 }
 
+variable "database_name" {
+  description = "The name of the database to be created in Synapse"
+  type        = string
+  default     = "canedge"
+}
+
+variable "admin_email" {
+  description = "The email address to be set as the SQL Microsoft Entra admin"
+  type        = string
+  default     = ""  # Will be dynamically determined if not provided
+}
+
 variable "github_token" {
   description = "GitHub Personal Access Token with read:packages scope for container registry authentication"
   type        = string
   sensitive   = true
-}
-
-variable "location" {
-  description = "Azure region where resources will be deployed"
-  type        = string
 }
