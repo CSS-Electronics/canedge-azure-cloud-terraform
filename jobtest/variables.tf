@@ -23,12 +23,6 @@ variable "unique_id" {
   type        = string
 }
 
-variable "database_name" {
-  description = "The name of the database to be created in Synapse"
-  type        = string
-  default     = "canedge"
-}
-
 variable "admin_email" {
   description = "The email address to be set as the SQL Microsoft Entra admin"
   type        = string
