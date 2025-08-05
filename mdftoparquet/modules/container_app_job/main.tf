@@ -70,6 +70,11 @@ resource "azurerm_container_app_job" "process_backlog" {
         value = var.input_container
       }
       
+      env {
+        name  = "CLOUD"
+        value = "Azure"
+      }
+      
       # Define explicit command with debug flag
       command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u process_backlog_azure.py"]
     }
