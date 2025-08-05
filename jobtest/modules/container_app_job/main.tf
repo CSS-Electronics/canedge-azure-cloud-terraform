@@ -18,7 +18,7 @@ resource "azurerm_container_app_environment" "job_env" {
 }
 
 # Get Storage Account Key for connection string
-data "azurerm_storage_account" "storage" {
+data "azurerm_storage_account" "existing" {
   name                = var.storage_account_name
   resource_group_name = var.resource_group_name
 }
@@ -73,7 +73,7 @@ resource "azurerm_container_app_job" "process_backlog" {
   # Secrets configuration
   secret {
     name  = "storage-connection-string"
-    value = "DefaultEndpointsProtocol=https;AccountName=${var.storage_account_name};AccountKey=${data.azurerm_storage_account.storage.primary_access_key};EndpointSuffix=core.windows.net"
+    value = "DefaultEndpointsProtocol=https;AccountName=${var.storage_account_name};AccountKey=${data.azurerm_storage_account.existing.primary_access_key};EndpointSuffix=core.windows.net"
   }
   
   # GitHub Container Registry authentication token

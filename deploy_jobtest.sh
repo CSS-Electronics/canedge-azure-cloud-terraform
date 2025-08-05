@@ -9,6 +9,8 @@ RESOURCE_GROUP=""
 STORAGE_ACCOUNT=""
 INPUT_CONTAINER=""
 UNIQUE_ID=""
+REGION=""
+
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -139,6 +141,11 @@ if [ $? -ne 0 ]; then
 fi
 echo "Input container $INPUT_CONTAINER exists"
 
+# If region is not specified, get it from the storage account
+if [ -z "$REGION" ]; then
+  REGION=$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --query "location" -o tsv)
+  echo "✓ Using region from storage account: $REGION"
+fi
 
 # Auto-detect the current user's email address using Azure CLI
 echo "Detecting current user's email address..."
@@ -228,7 +235,9 @@ terraform apply -auto-approve \
   -var "storage_account_name=$STORAGE_ACCOUNT" \
   -var "input_container_name=$INPUT_CONTAINER" \
   -var "unique_id=$UNIQUE_ID" \
+  -var="location=${REGION}" \
   -var "admin_email=$ADMIN_EMAIL"
+
 
 TERRAFORM_EXIT_CODE=$?
 
