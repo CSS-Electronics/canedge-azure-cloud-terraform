@@ -143,7 +143,7 @@ echo "Input container $INPUT_CONTAINER exists"
 
 # If region is not specified, get it from the storage account
 if [ -z "$REGION" ]; then
-  REGION=$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --query "location" -o tsv)
+  REGION=$(az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" --query "location" -o tsv)
   echo "✓ Using region from storage account: $REGION"
 fi
 
@@ -155,6 +155,7 @@ echo "  Resource Group:  $RESOURCE_GROUP"
 echo "  Storage Account: $STORAGE_ACCOUNT"
 echo "  Input Container: $INPUT_CONTAINER"
 echo "  Unique ID:       $UNIQUE_ID"
+echo "  Region:          $REGION"
 [[ -n "$GITHUB_TOKEN" ]] && echo "  GitHub Token:    Provided" || echo "  GitHub Token:    Not provided (public image required)"
 echo "========================================================"
 
@@ -190,6 +191,7 @@ export TF_VAR_resource_group_name="$RESOURCE_GROUP"
 export TF_VAR_storage_account_name="$STORAGE_ACCOUNT"
 export TF_VAR_input_container_name="$INPUT_CONTAINER"
 export TF_VAR_unique_id="$UNIQUE_ID"
+export TF_VAR_location="$REGION"
 export TF_IN_AUTOMATION="true"  # This prevents interactive prompts
 
 # Construct the Azure resource ID for the filesystem
