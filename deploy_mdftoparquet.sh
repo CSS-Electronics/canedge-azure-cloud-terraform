@@ -316,38 +316,16 @@ echo "Output Container:     $(echo $TERRAFORM_OUTPUT | jq -r '.output_container_
 echo "Function App:         $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_name.value')"
 echo "Function App URL:     $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_url.value')"
 
-# Display backlog processor information
-# echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
 
 echo
 echo "The MDF-to-Parquet pipeline has been successfully deployed!"
 echo "Any MF4 files uploaded to the input container will be automatically processed to Parquet format and stored in the output container."
 echo "Notifications will be sent to: $EMAIL_ADDRESS"
-
-# Display information about the backlog processor
-echo
-echo "BACKLOG PROCESSOR: The backlog processor container app job has been deployed."
-echo "You can manually trigger batch processing of historical log files from the Azure Portal:"
-echo "  1. Go to Container Apps > process-backlog-${UNIQUE_ID} > Jobs"
-echo "  2. Click 'Execute' to start batch processing"
-echo
 echo "IMPORTANT: If using a non-Azure AD email address for notifications, you must verify it:"
 echo "  1. Go to Azure Portal > Monitor > Action Groups"
 echo "  2. Select 'email-alerts-$UNIQUE_ID'"
 echo "  3. Check if email verification is needed (indicated by a warning icon)"
 echo "  4. The recipient must verify the email address to receive alerts"
-echo
-
-# Display logging information
-echo "CONTAINER APP JOB LOGGING:"
-echo "Log Analytics Workspace: $(echo $TERRAFORM_OUTPUT | jq -r '.log_analytics_workspace_name.value')"
-echo "To view Container App logs, go to Azure Portal > Log Analytics workspaces > $(echo $TERRAFORM_OUTPUT | jq -r '.log_analytics_workspace_name.value') > Logs"
-echo
-echo "Sample KQL queries to check logs:"
-echo "  Console Logs: ContainerAppConsoleLogs | where ContainerName == 'test-container' | order by TimeGenerated desc"
-echo "  System Logs:  ContainerAppSystemLogs | where ContainerAppName contains 'synapse-map-tables' | order by TimeGenerated desc"
-echo "  All Logs:     union ContainerAppConsoleLogs, ContainerAppSystemLogs | order by TimeGenerated desc"
-echo "  (If above tables don't exist, try with _CL suffix: ContainerAppConsoleLogs_CL, ContainerAppSystemLogs_CL)"
 echo
 
 # Restart the function app to ensure changes are recognized
