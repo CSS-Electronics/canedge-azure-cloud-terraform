@@ -145,18 +145,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "Input container $INPUT_CONTAINER exists"
 
-# Verify that the output container (created by MDF-to-Parquet) exists
-OUTPUT_CONTAINER="${INPUT_CONTAINER}-parquet"
-echo "Verifying output container: $OUTPUT_CONTAINER"
-az storage container show --name "$OUTPUT_CONTAINER" --account-name "$STORAGE_ACCOUNT" --auth-mode login > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  echo "Error: Output container $OUTPUT_CONTAINER does not exist in storage account $STORAGE_ACCOUNT"
-  echo "Make sure you've run the MDF-to-Parquet deployment first."
-  exit 1
-fi
-echo "Output container $OUTPUT_CONTAINER exists"
-
-
 
 if [[ -z "$DATABASE_NAME" ]]; then
   DATABASE_NAME="canedge"
