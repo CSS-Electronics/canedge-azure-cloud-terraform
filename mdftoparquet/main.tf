@@ -161,17 +161,6 @@ resource "azurerm_application_insights" "insights" {
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
-  
-  # Prevent destruction of existing insights
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes = [
-      name,
-      location,
-      resource_group_name,
-      application_type
-    ]
-  }
 }
 
 # Create SAS token for accessing the function ZIP
