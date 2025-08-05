@@ -147,20 +147,6 @@ if [ -z "$REGION" ]; then
   echo "✓ Using region from storage account: $REGION"
 fi
 
-# Auto-detect the current user's email address using Azure CLI
-echo "Detecting current user's email address..."
-ADMIN_EMAIL=$(az ad signed-in-user show --query userPrincipalName -o tsv 2>/dev/null)
-
-# Fallback in case direct email detection fails
-if [ -z "$ADMIN_EMAIL" ]; then
-  echo "Could not detect email directly, using account information..."
-  OBJECT_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
-  TENANT_ID=$(az account show --query tenantId -o tsv 2>/dev/null)
-  ADMIN_EMAIL="$OBJECT_ID@$TENANT_ID"
-  echo "Using generated admin identity: $ADMIN_EMAIL"
-else
-  echo "Detected user email: $ADMIN_EMAIL"
-fi
 
 echo "========================================================"
 echo "Starting deployment with the following parameters:"
@@ -169,7 +155,6 @@ echo "  Resource Group:  $RESOURCE_GROUP"
 echo "  Storage Account: $STORAGE_ACCOUNT"
 echo "  Input Container: $INPUT_CONTAINER"
 echo "  Unique ID:       $UNIQUE_ID"
-echo "  Admin Email:     $ADMIN_EMAIL"
 [[ -n "$GITHUB_TOKEN" ]] && echo "  GitHub Token:    Provided" || echo "  GitHub Token:    Not provided (public image required)"
 echo "========================================================"
 
@@ -235,8 +220,7 @@ terraform apply -auto-approve \
   -var "storage_account_name=$STORAGE_ACCOUNT" \
   -var "input_container_name=$INPUT_CONTAINER" \
   -var "unique_id=$UNIQUE_ID" \
-  -var="location=${REGION}" \
-  -var "admin_email=$ADMIN_EMAIL"
+  -var="location=${REGION}"
 
 
 TERRAFORM_EXIT_CODE=$?
