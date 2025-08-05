@@ -239,19 +239,53 @@ else
   PRINCIPAL_ID=$(terraform output -raw module.container_app_job.job_principal_id 2>/dev/null)
   LOG_ANALYTICS_ID=$(terraform output -raw module.container_app_job.log_analytics_id 2>/dev/null)
   
+  # Debug information
+  echo "Principal ID: $PRINCIPAL_ID"
+  echo "Log Analytics ID: $LOG_ANALYTICS_ID"
+  
   # Check if we have both required IDs
   if [ -n "$PRINCIPAL_ID" ] && [ -n "$LOG_ANALYTICS_ID" ]; then
     echo "Assigning Log Analytics Contributor role to container app job's managed identity..."
+    
+    # Wait a moment for the identity to fully propagate in Azure
+    echo "Waiting 15 seconds for the managed identity to propagate..."
+    sleep 15
+    
+    # Try first with --skip-assignment-check to avoid potential permission issues
     az role assignment create \
       --assignee-object-id "$PRINCIPAL_ID" \
       --assignee-principal-type ServicePrincipal \
       --role "Log Analytics Contributor" \
-      --scope "$LOG_ANALYTICS_ID"
+      --scope "$LOG_ANALYTICS_ID" \
+      --skip-assignment-check true \
+      -o json
     
-    if [ $? -eq 0 ]; then
+    ROLE_RESULT=$?
+    
+    if [ $ROLE_RESULT -eq 0 ]; then
       echo "✅ Log Analytics permissions successfully assigned to container app job."
     else
-      echo "⚠️ Failed to assign Log Analytics permissions. Logs may not appear correctly."
+      echo "⚠️ Failed to assign Log Analytics permissions with skip-assignment-check. Trying alternative approach..."
+      
+      # Try with the Monitoring Metrics Publisher role instead, which might be more appropriate
+      az role assignment create \
+        --assignee-object-id "$PRINCIPAL_ID" \
+        --assignee-principal-type ServicePrincipal \
+        --role "Monitoring Metrics Publisher" \
+        --scope "$LOG_ANALYTICS_ID" \
+        --skip-assignment-check true \
+        -o json
+      
+      if [ $? -eq 0 ]; then
+        echo "✅ Monitoring Metrics Publisher role assigned successfully."
+      else
+        echo "⚠️ Failed to assign permissions. Your container app logs may not appear correctly."
+        echo "You may need to manually assign permissions in the Azure Portal:"
+        echo "1. Go to your Log Analytics workspace"
+        echo "2. Select Access control (IAM)"
+        echo "3. Add a role assignment for the container app's managed identity"
+        echo "4. Choose either 'Log Analytics Contributor' or 'Monitoring Metrics Publisher'"
+      fi
     fi
   else
     echo "⚠️ Could not retrieve managed identity or Log Analytics information. Skipping role assignment."
