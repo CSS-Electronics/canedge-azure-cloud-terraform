@@ -36,7 +36,7 @@ data "azurerm_storage_account" "storage" {
 
 # Create Container App Job
 resource "azurerm_container_app_job" "map_tables" {
-  name                         = "testjob"
+  name                         = "jobtest"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
