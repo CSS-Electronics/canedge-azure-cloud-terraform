@@ -117,5 +117,5 @@ If you encounter issues with either deployment:
   | order by timestamp desc
   ```
 
-- If your Azure Job fails, wait 5 mins and go to 'Execution history/Logs/Console' for details
+- If your Azure Job fails (backlog processing or synapse table mapping), wait 5 mins and go to 'Execution history/Logs/Console' for details
 - [Contact us](https://www.csselectronics.com/pages/contact-us) if you need deployment support
