@@ -16,13 +16,13 @@ variable "unique_id" {
 variable "job_name" {
   description = "Name of the Container App Job"
   type        = string
-  default     = "jobtestmdf"
+  default     = "backlog"
 }
 
 variable "container_image" {
   description = "Container image to use for the job"
   type        = string
-  default     = "ghcr.io/css-electronics/canedge-test-container:latest"
+  default     = "ghcr.io/css-electronics/backlog-processor-azure-container:latest"
 }
 
 variable "storage_account_name" {
@@ -70,4 +70,10 @@ variable "trigger_type" {
   description = "Trigger type for the job (Manual or Schedule)"
   type        = string
   default     = "Manual"
+}
+
+variable "input_container" {
+  description = "Name of the input container in Azure Storage"
+  type        = string
+  default     = ""
 }

@@ -304,6 +304,7 @@ module "container_app_job" {
   unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
   github_token          = var.github_token
+  input_container       = var.input_container_name
   
   # Add tags for resource management
   tags = {

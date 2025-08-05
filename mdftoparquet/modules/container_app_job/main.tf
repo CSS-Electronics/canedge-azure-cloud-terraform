@@ -25,7 +25,7 @@ data "azurerm_storage_account" "existing" {
 
 # Create Container App Job
 resource "azurerm_container_app_job" "process_backlog" {
-  name                         = "jobtestmdf"
+  name                         = "backlog"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
@@ -49,13 +49,13 @@ resource "azurerm_container_app_job" "process_backlog" {
   
   template {
     container {
-      name   = "jobtestmdf"
+      name   = "backlog"
       image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
             
       env {
-        name  = "STORAGE_CONNECTION_STRING"
+        name  = "StorageConnectionString"
         secret_name = "storage-connection-string"
       }
       
@@ -64,9 +64,14 @@ resource "azurerm_container_app_job" "process_backlog" {
         name  = "DEBUG"
         value = "true"
       }
+
+      env {
+        name  = "INPUT_BUCKET"
+        value = var.input_container
+      }
       
       # Define explicit command with debug flag
-      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u test_container.py"]
+      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u process_backlog_azure.py"]
     }
   }
   
