@@ -30,22 +30,6 @@ variable "storage_account_name" {
   type        = string
 }
 
-variable "output_container_name" {
-  description = "Name of the output container with Parquet files"
-  type        = string
-}
-
-variable "synapse_server" {
-  description = "Synapse SQL server endpoint"
-  type        = string
-}
-
-variable "synapse_sql_password" {
-  description = "Password for the Synapse SQL admin"
-  type        = string
-  sensitive   = true
-}
-
 variable "github_username" {
   description = "GitHub username for container registry authentication"
   type        = string
