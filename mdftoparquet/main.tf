@@ -161,6 +161,7 @@ resource "azurerm_application_insights" "insights" {
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
+  workspace_id        = azurerm_log_analytics_workspace.container_app.id
   
   # Prevent destruction of existing insights
   lifecycle {
@@ -169,7 +170,8 @@ resource "azurerm_application_insights" "insights" {
       name,
       location,
       resource_group_name,
-      application_type
+      application_type,
+      workspace_id
     ]
   }
 }
