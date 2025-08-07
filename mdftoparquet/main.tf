@@ -155,13 +155,29 @@ resource "azurerm_linux_function_app" "function_app" {
   }
 }
 
-# Create Application Insights for monitoring
+# Create Application Insights for monitoring backlog container
 resource "azurerm_application_insights" "insights" {
-  name                = "appinsights-${var.unique_id}"
+  name                = "appinsights-backlog-${var.unique_id}"
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
   workspace_id        = module.container_app_job.log_analytics_id
+  
+  # Prevent Terraform from trying to remove workspace_id
+  lifecycle {
+    ignore_changes = [
+      workspace_id
+    ]
+  }
+}
+
+# Create Application Insights for monitoring aggregation container
+resource "azurerm_application_insights" "insights" {
+  name                = "appinsights-aggregation-${var.unique_id}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  application_type    = "web"
+  workspace_id        = module.container_app_job_aggregation.log_analytics_id
   
   # Prevent Terraform from trying to remove workspace_id
   lifecycle {
@@ -308,5 +324,24 @@ module "container_app_job" {
     Environment = "Production"
     Application = "CANedge"
     Component   = "BacklogProcessor"
+  }
+}
+
+
+# Deploy Container App Job for Aggregation Processor
+module "container_app_job_aggregation" {
+  source                = "./modules/container_app_job_aggregation"
+  resource_group_name   = var.resource_group_name
+  location              = var.location
+  unique_id             = var.unique_id
+  storage_account_name  = var.storage_account_name
+  github_token          = var.github_token
+  input_container       = var.input_container_name
+  
+  # Add tags for resource management
+  tags = {
+    Environment = "Production"
+    Application = "CANedge"
+    Component   = "AggregationProcessor"
   }
 }

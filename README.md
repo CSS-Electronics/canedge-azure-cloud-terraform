@@ -44,7 +44,7 @@ Replace:
 
 ### 2: Deploy MF4-to-Parquet Pipeline
 
-Once you have an input container set up, you can optionally deploy the processing pipeline to automatically DBC decode uploaded MF4 files to Parquet format and provide backlog processing capabilities:
+Once you have an input container set up, you can optionally deploy the processing pipeline to automatically DBC decode uploaded MF4 files to Parquet format and provide backlog/aggregation processing capabilities:
 
 ```bash
 chmod +x deploy_mdftoparquet.sh && ./deploy_mdftoparquet.sh  --subid YOUR_SUBSCRIPTION_ID --resourcegroup YOUR_RESOURCE_GROUP --storageaccount YOUR_STORAGE_ACCOUNT --container YOUR_INPUT_CONTAINER_NAME --id YOUR_UNIQUE_ID --email YOUR_EMAIL --github-token YOUR_GITHUB_TOKEN
@@ -58,7 +58,7 @@ Replace:
 - `YOUR_INPUT_CONTAINER_NAME` with your input container name from step 1 (e.g. `canedge-test-container-20`)
 - `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`)
 - `YOUR_EMAIL` with your email address to receive notifications
-- `YOUR_GITHUB_TOKEN` with the GitHub token for accessing the backlog processor container registry
+- `YOUR_GITHUB_TOKEN` with the GitHub token for accessing the backlog/aggregation processor container registry
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake/Azure)*
 
 Optional Parameters:
