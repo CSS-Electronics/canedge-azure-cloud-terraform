@@ -300,10 +300,25 @@ show_connection_details() {
 show_job_information() {
   echo "======================================================="
   
-  # Get the job instructions output
-  terraform output -json synapse_table_mapper_instructions 2>/dev/null | jq -r '.'
+  # Get the job name for use in the instructions
+  JOB_NAME=$(terraform output -json container_app_job_name 2>/dev/null | jq -r '.')
   
-  # Check if output was successful
+  # Display instructions directly in the script
+  cat << EOF
+
+===== SYNAPSE TABLE MAPPER INSTRUCTIONS =====
+
+The Synapse Table Mapper job is a containerized application that automatically
+creates Synapse external tables for all device/message folders in your Parquet data lake.
+
+It should be run if new devices/messages are added to your data lake:
+1. Go to Azure Portal > Container Apps > Jobs
+2. Select the "${JOB_NAME}" job
+3. Click "Start execution" button (view logs to monitor progress)
+
+EOF
+
+  # Check if job name was successfully retrieved
   if [ $? -ne 0 ]; then
     echo "Failed to get Container App Job information."
     echo "Check the Azure portal to verify if the Container App Job was created."
