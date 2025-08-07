@@ -172,7 +172,7 @@ resource "azurerm_application_insights" "insights" {
 }
 
 # Create Application Insights for monitoring aggregation container
-resource "azurerm_application_insights" "insights" {
+resource "azurerm_application_insights" "insights_aggregation" {
   name                = "appinsights-aggregation-${var.unique_id}"
   location            = var.location
   resource_group_name = var.resource_group_name
