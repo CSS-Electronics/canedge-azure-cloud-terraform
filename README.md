@@ -56,7 +56,7 @@ Replace:
 - `YOUR_RESOURCE_GROUP` with your input container resource group from step 1 (e.g. `canedge-resources`)
 - `YOUR_STORAGE_ACCOUNT` with your input storage account from step 1 (e.g. `canedgestorage1`)
 - `YOUR_INPUT_CONTAINER_NAME` with your input container name from step 1 (e.g. `canedge-test-container-20`)
-- `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`)
+- `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`, max 10 chars)
 - `YOUR_EMAIL` with your email address to receive notifications
 - `YOUR_GITHUB_TOKEN` with the GitHub token for accessing the backlog/aggregation processor container registry
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake/Azure)*
