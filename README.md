@@ -44,7 +44,7 @@ Replace:
 
 ### 2: Deploy MF4-to-Parquet Pipeline
 
-Once you have an input container set up, you can optionally deploy the processing pipeline to automatically DBC decode uploaded MF4 files to Parquet format and provide backlog processing capabilities:
+Once you have an input container set up, you can optionally deploy the processing pipeline to automatically DBC decode uploaded MF4 files to Parquet format and provide backlog/aggregation processing capabilities:
 
 ```bash
 chmod +x deploy_mdftoparquet.sh && ./deploy_mdftoparquet.sh  --subid YOUR_SUBSCRIPTION_ID --resourcegroup YOUR_RESOURCE_GROUP --storageaccount YOUR_STORAGE_ACCOUNT --container YOUR_INPUT_CONTAINER_NAME --id YOUR_UNIQUE_ID --email YOUR_EMAIL --github-token YOUR_GITHUB_TOKEN
@@ -56,9 +56,9 @@ Replace:
 - `YOUR_RESOURCE_GROUP` with your input container resource group from step 1 (e.g. `canedge-resources`)
 - `YOUR_STORAGE_ACCOUNT` with your input storage account from step 1 (e.g. `canedgestorage1`)
 - `YOUR_INPUT_CONTAINER_NAME` with your input container name from step 1 (e.g. `canedge-test-container-20`)
-- `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`)
+- `YOUR_UNIQUE_ID` with a short unique identifier (e.g. `datalake1`, max 10 chars)
 - `YOUR_EMAIL` with your email address to receive notifications
-- `YOUR_GITHUB_TOKEN` with the GitHub token for accessing the backlog processor container registry
+- `YOUR_GITHUB_TOKEN` with the GitHub token for accessing the backlog/aggregation processor container registry
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake/Azure)*
 
 Optional Parameters:
@@ -105,7 +105,7 @@ If you encounter issues with either deployment:
 
 - Make sure you have proper permissions in your Azure cloud
 - Try refreshing the page and restarting the shell (make sure to select 'Bash' mode)
-- For the MF4-to-Parquet deployment ensure the function ZIP is uploaded to your input container before deployment
+- For the MF4-to-Parquet deployment ensure the function ZIP is uploaded to your input container
 - Use unique identifiers with the `--id` parameter to avoid resource conflicts
 - When deploying the MF4-to-Parquet pipeline, it can take 5-10 min for the function to be fully deployed. You can then open the 'Logs' tab in the function in one tab and after 1-3 min upload an MF4 test file to your input container to track the decoding results in real-time
 - If your function does not deploy in your Function App, check Monitoring/Logs/KQL mode with below:
@@ -117,5 +117,5 @@ If you encounter issues with either deployment:
   | order by timestamp desc
   ```
 
-- If your Azure Job fails, wait 5 mins and go to 'Execution history/Logs/Console' for details
+- If your Azure Job fails (backlog processing or synapse table mapping), wait 5 mins and go to 'Execution history/Logs/Console' for details
 - [Contact us](https://www.csselectronics.com/pages/contact-us) if you need deployment support

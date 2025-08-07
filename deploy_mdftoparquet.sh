@@ -37,7 +37,7 @@ FUNCTION_APP_NAME=""
 REGION=""
 GITHUB_TOKEN=""
 # Default function zip name (easily updateable)
-DEFAULT_FUNCTION_ZIP="mdf-to-parquet-azure-function-v3.0.1.zip"
+DEFAULT_FUNCTION_ZIP="mdf-to-parquet-azure-function-v4.0.0.zip"
 FUNCTION_ZIP_NAME="$DEFAULT_FUNCTION_ZIP" # Set default value
 
 # Function to restart the Azure Function App after deployment
@@ -190,6 +190,15 @@ else
   echo "✓ Subscription set successfully"
 fi
 
+
+# Register required resource providers
+echo "Registering the Microsoft.App resource provider (needed for Container Apps)..."
+az provider register --namespace Microsoft.App
+
+echo "Registering the Microsoft.OperationalInsights resource provider (needed for Log Analytics)..."
+az provider register --namespace Microsoft.OperationalInsights
+
+
 # Check if storage account exists and function zip file is in the container
 echo "Verifying storage account and function ZIP file..."
 STORAGE_ACCOUNT=$(az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" 2>/dev/null)
@@ -307,21 +316,11 @@ echo "Output Container:     $(echo $TERRAFORM_OUTPUT | jq -r '.output_container_
 echo "Function App:         $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_name.value')"
 echo "Function App URL:     $(echo $TERRAFORM_OUTPUT | jq -r '.function_app_url.value')"
 
-# Display backlog processor information
-echo "Backlog Processor:    $(echo $TERRAFORM_OUTPUT | jq -r '.backlog_processor_job_name.value')"
 
 echo
 echo "The MDF-to-Parquet pipeline has been successfully deployed!"
 echo "Any MF4 files uploaded to the input container will be automatically processed to Parquet format and stored in the output container."
 echo "Notifications will be sent to: $EMAIL_ADDRESS"
-
-# Display information about the backlog processor
-echo
-echo "BACKLOG PROCESSOR: The backlog processor container app job has been deployed."
-echo "You can manually trigger batch processing of historical log files from the Azure Portal:"
-echo "  1. Go to Container Apps > process-backlog-${UNIQUE_ID} > Jobs"
-echo "  2. Click 'Execute' to start batch processing"
-echo
 echo "IMPORTANT: If using a non-Azure AD email address for notifications, you must verify it:"
 echo "  1. Go to Azure Portal > Monitor > Action Groups"
 echo "  2. Select 'email-alerts-$UNIQUE_ID'"

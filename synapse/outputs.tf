@@ -45,19 +45,4 @@ output "container_app_job_execution_command" {
   value       = module.container_app_job.execution_command
 }
 
-output "synapse_table_mapper_instructions" {
-  description = "Instructions for using the Synapse Table Mapper job"
-  value = <<EOF
 
-===== SYNAPSE TABLE MAPPER INSTRUCTIONS =====
-
-The Synapse Table Mapper job is a containerized application that automatically
-creates Synapse external tables for all device/message folders in your Parquet data lake.
-
-It should be run if new devices/messages are added to your data lake:
-1. Go to Azure Portal > Container Apps > Jobs
-2. Select the "${module.container_app_job.job_name}" job
-3. Click "Start execution" button (view logs to monitor progress)
-
-EOF
-}

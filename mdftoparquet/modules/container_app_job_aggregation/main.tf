@@ -18,23 +18,23 @@ resource "azurerm_container_app_environment" "job_env" {
 }
 
 # Get Storage Account Key for connection string
-data "azurerm_storage_account" "storage" {
+data "azurerm_storage_account" "existing" {
   name                = var.storage_account_name
   resource_group_name = var.resource_group_name
 }
 
 # Create Container App Job
-resource "azurerm_container_app_job" "backlog_processor" {
-  name                         = "${var.job_name}-${var.unique_id}"
+resource "azurerm_container_app_job" "process_aggregation" {
+  name                         = "aggregation-${var.unique_id}"
   container_app_environment_id = azurerm_container_app_environment.job_env.id
   resource_group_name          = var.resource_group_name
   location                     = var.location
   tags                         = var.tags
   
-  # Required field - set to 1 hour to allow for long-running processing
+  # Required field
   replica_timeout_in_seconds   = 3600
   
-  # Manual trigger config
+  # Manual trigger configuration
   manual_trigger_config {
     parallelism              = 1
     replica_completion_count = 1
@@ -49,21 +49,11 @@ resource "azurerm_container_app_job" "backlog_processor" {
   
   template {
     container {
-      name   = "mdf-backlog-processor"
+      name   = "aggregation-${var.unique_id}"
       image  = var.container_image
       cpu    = var.cpu
       memory = var.memory
-      
-      env {
-        name  = "STORAGE_ACCOUNT"
-        value = var.storage_account_name
-      }
-      
-      env {
-        name  = "INPUT_BUCKET"
-        value = var.input_container_name
-      }
-      
+            
       env {
         name  = "StorageConnectionString"
         secret_name = "storage-connection-string"
@@ -74,18 +64,26 @@ resource "azurerm_container_app_job" "backlog_processor" {
         name  = "DEBUG"
         value = "true"
       }
+
+      env {
+        name  = "INPUT_BUCKET"
+        value = var.input_container
+      }
       
-      # Let the container use its built-in settings from the Dockerfile
-      # - WORKDIR /app
-      # - ENV MF4_DECODER=/app/mdf2parquet_decode
-      # - ENTRYPOINT ["python", "process_backlog_azure.py"]
+      env {
+        name  = "CLOUD"
+        value = "Azure"
+      }
+      
+      # Define explicit command with debug flag
+      command = ["sh", "-c", "echo 'Starting container' && env | grep -v PASSWORD && python -u process_aggregation_container.py"]
     }
   }
   
   # Secrets configuration
   secret {
     name  = "storage-connection-string"
-    value = "DefaultEndpointsProtocol=https;AccountName=${var.storage_account_name};AccountKey=${data.azurerm_storage_account.storage.primary_access_key};EndpointSuffix=core.windows.net"
+    value = "DefaultEndpointsProtocol=https;AccountName=${var.storage_account_name};AccountKey=${data.azurerm_storage_account.existing.primary_access_key};EndpointSuffix=core.windows.net"
   }
   
   # GitHub Container Registry authentication token

@@ -8,7 +8,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.0.0"
+      version = "~> 3.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -40,7 +40,7 @@ locals {
 
 resource "azurerm_storage_container" "output_container" {
   name                  = local.output_container_name
-  storage_account_id    = data.azurerm_storage_account.existing.id
+  storage_account_name  = data.azurerm_storage_account.existing.name
   container_access_type = "private"
   
   # Prevent destruction of existing container
@@ -48,7 +48,7 @@ resource "azurerm_storage_container" "output_container" {
     prevent_destroy = true
     ignore_changes = [
       name,
-      storage_account_id,
+      storage_account_name,
       container_access_type
     ]
   }
@@ -155,21 +155,34 @@ resource "azurerm_linux_function_app" "function_app" {
   }
 }
 
-# Create Application Insights for monitoring
+# Create Application Insights for monitoring backlog container
 resource "azurerm_application_insights" "insights" {
-  name                = "appinsights-${var.unique_id}"
+  name                = "appinsights-backlog-${var.unique_id}"
   location            = var.location
   resource_group_name = var.resource_group_name
   application_type    = "web"
+  workspace_id        = module.container_app_job.log_analytics_id
   
-  # Prevent destruction of existing insights
+  # Prevent Terraform from trying to remove workspace_id
   lifecycle {
-    prevent_destroy = true
     ignore_changes = [
-      name,
-      location,
-      resource_group_name,
-      application_type
+      workspace_id
+    ]
+  }
+}
+
+# Create Application Insights for monitoring aggregation container
+resource "azurerm_application_insights" "insights_aggregation" {
+  name                = "appinsights-aggregation-${var.unique_id}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  application_type    = "web"
+  workspace_id        = module.container_app_job_aggregation.log_analytics_id
+  
+  # Prevent Terraform from trying to remove workspace_id
+  lifecycle {
+    ignore_changes = [
+      workspace_id
     ]
   }
 }
@@ -296,26 +309,39 @@ module "monitoring" {
   ]
 }
 
-# Deploy the backlog processor container app job (if GitHub token provided)
-module "container_app_job_backlog" {
-  source = "./modules/container_app_job_backlog"
-  count  = var.github_token != "" ? 1 : 0
-  
+# Deploy Container App Job for Backlog Processor
+module "container_app_job" {
+  source                = "./modules/container_app_job"
   resource_group_name   = var.resource_group_name
   location              = var.location
+  unique_id             = var.unique_id
   storage_account_name  = var.storage_account_name
-  input_container_name  = var.input_container_name
-  output_container_name = local.output_container_name
-  unique_id            = var.unique_id
-  github_token         = var.github_token
+  github_token          = var.github_token
+  input_container       = var.input_container_name
   
+  # Add tags for resource management
   tags = {
-    deployedBy = "terraform"
-    purpose    = "mdf-backlog-processing"
-    uniqueId   = var.unique_id
+    Environment = "Production"
+    Application = "CANedge"
+    Component   = "BacklogProcessor"
   }
+}
+
+
+# Deploy Container App Job for Aggregation Processor
+module "container_app_job_aggregation" {
+  source                = "./modules/container_app_job_aggregation"
+  resource_group_name   = var.resource_group_name
+  location              = var.location
+  unique_id             = var.unique_id
+  storage_account_name  = var.storage_account_name
+  github_token          = var.github_token
+  input_container       = var.input_container_name
   
-  depends_on = [
-    azurerm_storage_container.output_container
-  ]
+  # Add tags for resource management
+  tags = {
+    Environment = "Production"
+    Application = "CANedge"
+    Component   = "AggregationProcessor"
+  }
 }
