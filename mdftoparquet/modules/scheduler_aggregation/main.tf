@@ -1,77 +1,80 @@
 /**
- * Azure Logic App Scheduler for Container App Job Aggregation
- * Creates a Logic App workflow that triggers the container app job on a schedule
- * Disabled by default, can be enabled through the Azure portal or by setting enabled = true
+ * Minimal Azure Logic App Scheduler for Container App Job Aggregation
+ * Creates a simple Logic App workflow to trigger the container app job
+ * Disabled by default, can be enabled through the Azure Portal
  */
 
-# Create Logic App Standard that will serve as our scheduler
+# Create Logic App Workflow that will serve as our scheduler
 resource "azurerm_logic_app_workflow" "aggregation_scheduler" {
   name                = "scheduler-aggregation-${var.unique_id}"
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
-  # Disable workflow until explicitly enabled
+  # Disable workflow by default
   enabled             = var.scheduler_enabled
 
-  # Connect the identity to access the container app
+  # Use managed identity for authentication
   identity {
     type = "SystemAssigned"
   }
-}
 
-# Instead of using a data source, we'll build the endpoint URL
-locals {
-  # Format for Container App Job endpoint: https://{job-name}.{unique-string}.{region}.azurecontainerapps.io
-  container_app_job_url = "https://${var.container_app_job_name}-${var.unique_id}.${var.location}.azurecontainerapps.io"
-}
-
-# Define the recurrence trigger - Using specific schema that works with azurerm ~> 3.0
-resource "azurerm_logic_app_trigger_recurrence" "daily_trigger" {
-  name         = "daily-aggregation-trigger"
-  logic_app_id = azurerm_logic_app_workflow.aggregation_scheduler.id
-  frequency    = var.scheduler_frequency
-  interval     = var.scheduler_interval
-  # For this version we need to use a specific schedule format in schema_json
-  schema = jsonencode({
-    "type": "Recurrence",
-    "recurrence": {
-      "frequency": var.scheduler_frequency,
-      "interval": var.scheduler_interval,
-      "schedule": {
-        "hours": [var.scheduler_hour],
-        "minutes": [var.scheduler_minute]
-      },
-      "timeZone": var.scheduler_timezone
+  # Use workflow_parameters to define the endpoint URL
+  workflow_parameters = jsonencode({
+    "$connections": {
+      "defaultValue": {},
+      "type": "Object"
     }
   })
-}
 
-# Use a generic action definition that works with azurerm ~> 3.0
-resource "azurerm_logic_app_action_custom" "trigger_job" {
-  name         = "trigger-container-app-job"
-  logic_app_id = azurerm_logic_app_workflow.aggregation_scheduler.id
-  body = jsonencode({
-    "inputs": {
-      "method": "POST",
-      "uri": "${local.container_app_job_url}/jobs",
-      "headers": {
-        "Content-Type": "application/json"
-      },
-      "body": {
-        "properties": {}
+  # Define the workflow definition directly in the workflow resource
+  workflow_schema = "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
+  
+  # Complete workflow definition with recurrence trigger and HTTP action
+  workflow_definition = jsonencode({
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
       }
     },
-    "runAfter": {},
-    "type": "Http"
+    "triggers": {
+      "daily_trigger": {
+        "recurrence": {
+          "frequency": var.scheduler_frequency,
+          "interval": var.scheduler_interval,
+          "schedule": {
+            "hours": [var.scheduler_hour],
+            "minutes": [var.scheduler_minute]
+          },
+          "timeZone": var.scheduler_timezone
+        },
+        "type": "Recurrence"
+      }
+    },
+    "actions": {
+      "trigger_container_app_job": {
+        "inputs": {
+          "method": "POST",
+          "uri": "https://${var.container_app_job_name}-${var.unique_id}.${var.location}.azurecontainerapps.io/jobs",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "properties": {}
+          }
+        },
+        "runAfter": {},
+        "type": "Http"
+      }
+    },
+    "outputs": {}
   })
-  depends_on = [
-    azurerm_logic_app_trigger_recurrence.daily_trigger
-  ]
 }
 
-# Grant permissions at resource group level instead of specific container app job
-# This is simpler and avoids needing to know the exact job ARM ID
+# Grant permissions at resource group level for the Logic App's managed identity
 resource "azurerm_role_assignment" "logic_app_contributor" {
   scope                = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
   role_definition_name = "Contributor"
