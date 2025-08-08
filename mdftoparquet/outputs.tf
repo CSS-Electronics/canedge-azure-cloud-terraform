@@ -47,3 +47,14 @@ output "eventgrid_subscription_name" {
   description = "Name of the Event Grid Subscription"
   value       = azurerm_eventgrid_system_topic_event_subscription.input_events.name
 }
+
+# Scheduler outputs
+output "aggregation_scheduler_name" {
+  description = "Name of the Aggregation Scheduler Logic App"
+  value       = module.scheduler_aggregation.logic_app_name
+}
+
+output "aggregation_scheduler_status" {
+  description = "Status of the Aggregation Scheduler (Enabled/Disabled)"
+  value       = module.scheduler_aggregation.scheduler_status
+}

@@ -345,3 +345,24 @@ module "container_app_job_aggregation" {
     Component   = "AggregationProcessor"
   }
 }
+
+# Deploy Scheduler for Aggregation Job (disabled by default)
+module "scheduler_aggregation" {
+  source                = "./modules/scheduler_aggregation"
+  resource_group_name   = var.resource_group_name
+  location              = var.location
+  unique_id             = var.unique_id
+  container_app_job_name = module.container_app_job_aggregation.job_name
+  scheduler_enabled     = false
+  
+  # Add tags for resource management
+  tags = {
+    Environment = "Production"
+    Application = "CANedge"
+    Component   = "AggregationScheduler"
+  }
+  
+  depends_on = [
+    module.container_app_job_aggregation
+  ]
+}
