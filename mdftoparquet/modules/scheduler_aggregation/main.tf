@@ -26,29 +26,44 @@ locals {
   container_app_job_url = "https://${var.container_app_job_name}-${var.unique_id}.${var.location}.azurecontainerapps.io"
 }
 
-# Define the recurrence trigger
+# Define the recurrence trigger - Using specific schema that works with azurerm ~> 3.0
 resource "azurerm_logic_app_trigger_recurrence" "daily_trigger" {
   name         = "daily-aggregation-trigger"
   logic_app_id = azurerm_logic_app_workflow.aggregation_scheduler.id
   frequency    = var.scheduler_frequency
   interval     = var.scheduler_interval
-  # Use at_these_hours and at_these_minutes instead of a schedule block
-  at_these_hours   = [var.scheduler_hour]
-  at_these_minutes = [var.scheduler_minute]
-  time_zone        = var.scheduler_timezone
+  # For this version we need to use a specific schedule format in schema_json
+  schema = jsonencode({
+    "type": "Recurrence",
+    "recurrence": {
+      "frequency": var.scheduler_frequency,
+      "interval": var.scheduler_interval,
+      "schedule": {
+        "hours": [var.scheduler_hour],
+        "minutes": [var.scheduler_minute]
+      },
+      "timeZone": var.scheduler_timezone
+    }
+  })
 }
 
-# Define the HTTP action to trigger the job
-resource "azurerm_logic_app_action_http" "trigger_job" {
+# Use a generic action definition that works with azurerm ~> 3.0
+resource "azurerm_logic_app_action_custom" "trigger_job" {
   name         = "trigger-container-app-job"
   logic_app_id = azurerm_logic_app_workflow.aggregation_scheduler.id
-  method       = "POST"
-  uri          = "${local.container_app_job_url}/jobs"
-  headers = {
-    "Content-Type" = "application/json"
-  }
   body = jsonencode({
-    "properties": {}
+    "inputs": {
+      "method": "POST",
+      "uri": "${local.container_app_job_url}/jobs",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "properties": {}
+      }
+    },
+    "runAfter": {},
+    "type": "Http"
   })
   depends_on = [
     azurerm_logic_app_trigger_recurrence.daily_trigger
