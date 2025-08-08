@@ -349,6 +349,7 @@ module "container_app_job_aggregation" {
 # Deploy Scheduler for Aggregation Job (disabled by default)
 module "scheduler_aggregation" {
   source                = "./modules/scheduler_aggregation"
+  subscription_id       = var.subscription_id
   resource_group_name   = var.resource_group_name
   location              = var.location
   unique_id             = var.unique_id
