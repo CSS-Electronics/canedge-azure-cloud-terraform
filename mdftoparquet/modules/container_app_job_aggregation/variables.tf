@@ -23,7 +23,7 @@ variable "container_image" {
   description = "Container image to use for the job"
   type        = string
   # Try image without specific processor path
-  default     = "ghcr.io/css-electronics/canedge-mdftoparquet-automation/aggregation-processor:sha-a828ac4"
+  default     = "ghcr.io/css-electronics/canedge-mdftoparquet-automation/aggregation-processor:sha-0bc2afc"
 }
 
 variable "storage_account_name" {

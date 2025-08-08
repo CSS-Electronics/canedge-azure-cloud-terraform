@@ -362,7 +362,6 @@ module "scheduler_aggregation" {
     Component   = "AggregationScheduler"
   }
   
-  depends_on = [
-    module.container_app_job_aggregation
-  ]
+  # No need for explicit depends_on as we're already referencing the module output
+  # container_app_job_name = module.container_app_job_aggregation.job_name
 }
