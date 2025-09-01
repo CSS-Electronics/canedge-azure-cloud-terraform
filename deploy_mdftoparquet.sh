@@ -37,7 +37,7 @@ FUNCTION_APP_NAME=""
 REGION=""
 GITHUB_TOKEN=""
 # Default function zip name (easily updateable)
-DEFAULT_FUNCTION_ZIP="mdf-to-parquet-azure-function-v4.0.1.zip"
+DEFAULT_FUNCTION_ZIP="mdf-to-parquet-azure-function-v4.0.2.zip"
 FUNCTION_ZIP_NAME="$DEFAULT_FUNCTION_ZIP" # Set default value
 
 # Function to restart the Azure Function App after deployment
