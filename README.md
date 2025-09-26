@@ -84,6 +84,7 @@ chmod +x deploy_synapse.sh && ./deploy_synapse.sh --subid YOUR_SUBSCRIPTION_ID -
 
 ```
 
+
 Replace:
 - `YOUR_SUBSCRIPTION_ID` with your desired Azure subscription ID (e.g. `ff652281-fac4-4dbb-b2ba-819cdf28ac83`)
 - `YOUR_RESOURCE_GROUP` with your input container resource group from step 1 (e.g. `canedge-resources`)
@@ -96,6 +97,9 @@ Replace:
 
 > [!NOTE]  
 > Pay-as-you-go subscriptions are limited to 2 active Synapse workspaces and the deployment fails if you have reached this quota limit. In this case, remove any unused workspaces and deploy again
+
+> [!IMPORTANT]  
+> If you are a Contributor (not Owner), you can add `--skip-role-assignment`. In this case you must manually assign the "Storage Blob Data Contributor" role to the Synapse workspace after deployment. The deployment script will provide detailed instructions.
 
 ----------
 
@@ -118,4 +122,5 @@ If you encounter issues with either deployment:
   ```
 
 - If your Azure Job fails (backlog processing or synapse table mapping), wait 5 mins and go to 'Execution history/Logs/Console' for details
+- If you get a role assignment authorization error (`Microsoft.Authorization/roleAssignments/write`), you likely have Contributor access instead of Owner. Use the `--skip-role-assignment` flag and manually assign the role after deployment
 - [Contact us](https://www.csselectronics.com/pages/contact-us) if you need deployment support

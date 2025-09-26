@@ -10,6 +10,7 @@ STORAGE_ACCOUNT=""
 INPUT_CONTAINER=""
 UNIQUE_ID=""
 DATABASE_NAME=""
+SKIP_ROLE_ASSIGNMENT="false"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -51,8 +52,17 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
+    --skip-role-assignment)
+      SKIP_ROLE_ASSIGNMENT="true"
+      shift
+      ;;
     *)
       echo "Unknown parameter: $1"
+      echo "Usage: $0 --subid SUBSCRIPTION_ID --resourcegroup RESOURCE_GROUP --storageaccount STORAGE_ACCOUNT --container INPUT_CONTAINER --id UNIQUE_ID --database DATABASE_NAME --github-token GITHUB_TOKEN [--skip-role-assignment]"
+      echo ""
+      echo "Options:"
+      echo "  --skip-role-assignment    Skip role assignment creation for users with Contributor access (not Owner)"
+      echo "                           When used, role assignment must be done manually after deployment"
       exit 1
       ;;
   esac
@@ -266,7 +276,9 @@ terraform apply -auto-approve \
   -var "input_container_name=$INPUT_CONTAINER" \
   -var "unique_id=$UNIQUE_ID" \
   -var "database_name=$DATABASE_NAME" \
-  -var "admin_email=$ADMIN_EMAIL"
+  -var "admin_email=$ADMIN_EMAIL" \
+  -var "github_token=$GITHUB_TOKEN" \
+  -var "skip_role_assignment=$SKIP_ROLE_ASSIGNMENT"
 
 TERRAFORM_EXIT_CODE=$?
 
@@ -332,6 +344,27 @@ if [ $TERRAFORM_EXIT_CODE -eq 0 ]; then
   show_connection_details
   # Show Container App Job information
   show_job_information
+  
+  # Show manual role assignment instructions if skip_role_assignment was used
+  if [ "$SKIP_ROLE_ASSIGNMENT" = "true" ]; then
+    echo "======================================================="
+    echo "⚠️  MANUAL STEP REQUIRED ⚠️"
+    echo "======================================================="
+    echo "Since --skip-role-assignment was used, you must manually assign"
+    echo "the 'Storage Blob Data Contributor' role to the Synapse workspace:"
+    echo ""
+    echo "1. Go to Azure Portal → Storage Accounts → $STORAGE_ACCOUNT"
+    echo "2. Navigate to 'Access Control (IAM)'"
+    echo "3. Click 'Add' → 'Add role assignment'"
+    echo "4. Select role: 'Storage Blob Data Contributor'"
+    echo "5. Assign access to: 'Managed identity'"
+    echo "6. Select the Synapse workspace: 'synapse-$UNIQUE_ID'"
+    echo "7. Click 'Save'"
+    echo ""
+    echo "This step is required for Synapse to access the Parquet data."
+    echo "======================================================="
+  fi
+  
   echo "======================================================="
   echo "Synapse deployment completed successfully"
   echo "======================================================="

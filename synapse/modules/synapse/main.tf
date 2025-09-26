@@ -42,7 +42,9 @@ data "azurerm_storage_container" "output_container" {
 
 # Grant the Synapse workspace Storage Blob Data Contributor access on the specific container
 # This matches the permission model from the manual deployment
+# Made conditional to support users with only Contributor access (not Owner)
 resource "azurerm_role_assignment" "synapse_container_contributor" {
+  count                = var.skip_role_assignment ? 0 : 1
   scope                = "${data.azurerm_storage_account.synapse_storage.id}/blobServices/default/containers/${var.output_container_name}"
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_synapse_workspace.synapse.identity[0].principal_id

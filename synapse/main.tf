@@ -62,6 +62,7 @@ module "synapse" {
   current_user_object_id            = data.azurerm_client_config.current.object_id
   admin_email                       = local.admin_email
   output_container_name             = local.output_container_name
+  skip_role_assignment              = var.skip_role_assignment
 }
 
 # Deploy Container App Job for Synapse table mapping

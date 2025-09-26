@@ -47,3 +47,9 @@ variable "output_container_name" {
   description = "The name of the container where parquet files are stored"
   type        = string
 }
+
+variable "skip_role_assignment" {
+  description = "Skip role assignment creation for users with Contributor access (not Owner). When true, role assignment must be done manually."
+  type        = bool
+  default     = false
+}
