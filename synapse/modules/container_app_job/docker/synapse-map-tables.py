@@ -13,6 +13,7 @@ import re
 import json
 import tempfile
 import logging
+from datetime import datetime
 import pyarrow as pa
 import pyarrow.parquet as pq
 from azure.storage.blob import BlobServiceClient
@@ -71,8 +72,9 @@ def list_device_message_folders(container_client):
         logger.error(f"Failed to list folders: {e}")
         return [], [], []
 
-def get_parquet_schema(container_client, folder_path):
-    """Extract schema from the first Parquet file in a folder"""
+def get_parquet_schema(container_client, folder_path, container_name):
+    """Extract schema from the first Parquet file in a folder.
+    Returns tuple of (schema, failed_blob_path) where failed_blob_path is None on success."""
     logger.info(f"- Getting schema for folder: {folder_path}")
     try:
         blobs = container_client.list_blobs(name_starts_with=folder_path)
@@ -86,14 +88,19 @@ def get_parquet_schema(container_client, folder_path):
                 try:
                     table = pq.read_table(temp_file_path)
                     logger.info(f"- Successfully read schema from {blob.name}")
-                    return table.schema
+                    return table.schema, None
+                except Exception as e:
+                    blob_path = f"https://{container_client.account_name}.blob.core.windows.net/{container_name}/{blob.name}"
+                    logger.error(f"ERROR: Failed to validate Parquet file: {blob_path}")
+                    logger.error(f"  Exception: {e}")
+                    return None, blob_path
                 finally:
                     os.remove(temp_file_path)
         logger.warning(f"- No Parquet files found in {folder_path}")
-        return None
+        return None, None
     except Exception as e:
         logger.error(f"- Failed to get Parquet schema for {folder_path}: {e}")
-        return None
+        return None, None
 
 def generate_create_external_table_sql(table_name, schema, location):
     """Generate SQL to create an external table"""
@@ -339,6 +346,10 @@ def main():
     # First drop all existing tables for clean slate
     drop_all_tables_in_database(synapse_server, synapse_user, synapse_password, synapse_database)
     
+    # Track failed Parquet files for error reporting
+    failed_parquet_files = []
+    execution_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    
     # Process metadata and create devicemeta table
     logger.info("Processing device metadata...")
     metadata_list = []
@@ -454,13 +465,43 @@ def main():
     for folder in folders:
         logger.info(" ")
         logger.info(f"Now processing {folder}:")
-        schema = get_parquet_schema(container_client, folder)
+        schema, failed_blob = get_parquet_schema(container_client, folder, container_output)
+        if failed_blob:
+            failed_parquet_files.append(failed_blob)
+            continue
         if schema is not None:
             table_name = folder.replace('/', '_')
             location = f'/{folder}'
             sql = generate_create_external_table_sql(table_name, schema, location)
             if create_external_table(synapse_server, synapse_user, synapse_password, synapse_database, sql, table_name):
                 tables_created += 1
+    
+    # Write error report to Azure Blob Storage if there were any failed Parquet files
+    if failed_parquet_files:
+        error_report = f"""Script execution time: {execution_time}
+
+The following Parquet files were invalid, resulting in the corresponding tables not being created:
+"""
+        for failed_file in failed_parquet_files:
+            error_report += f"- {failed_file}\n"
+        
+        error_report += """
+Typical root causes include below:
+
+1) The affected message has a variable length throughout the underlying MDF, resulting in an inconsistent column structure in the decoded Parquet file
+2) The DBC has a syntax error for the specific message
+3) The MF4 decoder may be outdated or have an unknown error
+
+To help troubleshoot this, you can create a local replication example (incl. the raw MDF/DBC files and the invalid Parquet) and send it to CSS Electronics.
+"""
+        
+        try:
+            error_blob_client = container_client.get_blob_client("synapse-mapping-errors.txt")
+            error_blob_client.upload_blob(error_report.encode('utf-8'), overwrite=True)
+            logger.info(f"\nError report written to container: synapse-mapping-errors.txt")
+            logger.info(f"Total failed Parquet files: {len(failed_parquet_files)}")
+        except Exception as e:
+            logger.error(f"Failed to write error report: {e}")
     
     logger.info(" ")
     logger.info(f"Process completed. Created {tables_created} tables out of {len(folders)} folders.")
