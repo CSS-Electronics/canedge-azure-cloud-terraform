@@ -321,6 +321,8 @@ def main():
         master_key_password = os.environ["MASTER_KEY_PASSWORD"]
         synapse_database = os.environ.get("SYNAPSE_DATABASE", "parquetdatalake")
         synapse_user = os.environ.get("SYNAPSE_USER", "sqladminuser")
+        # device.json lives in the INPUT container (not the output/-parquet container)
+        container_input = os.environ["CONTAINER_INPUT"]
     except KeyError as e:
         logger.error(f"Missing required environment variable: {e}")
         sys.exit(1)
@@ -330,9 +332,10 @@ def main():
     logger.info(f"Synapse server: {synapse_server}")
     logger.info(f"Synapse database: {synapse_database}")
     
-    # Initialize container client
+    # Initialize container clients: output holds the Parquet data; input holds device.json (meta names)
     container_client = initialize_blob_client(storage_connection_string, container_output)
-    
+    meta_container_client = initialize_blob_client(storage_connection_string, container_input)
+
     # List all device/message folders and get unique device IDs
     folders, prefixes, devices = list_device_message_folders(container_client)
     if not folders:
@@ -358,8 +361,8 @@ def main():
         metaname = device_id.upper()
         
         try:
-            # Get the device.json blob if it exists
-            blob_client = container_client.get_blob_client(device_json_path)
+            # Get the device.json blob if it exists (from the INPUT container)
+            blob_client = meta_container_client.get_blob_client(device_json_path)
             if blob_client.exists():
                 downloaded_blob = blob_client.download_blob().readall()
                 device_meta = json.loads(downloaded_blob)

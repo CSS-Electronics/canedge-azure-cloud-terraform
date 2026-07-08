@@ -74,7 +74,12 @@ resource "azurerm_container_app_job" "map_tables" {
         name  = "CONTAINER_OUTPUT"
         value = var.output_container_name
       }
-      
+
+      env {
+        name  = "CONTAINER_INPUT"
+        value = var.input_container_name
+      }
+
       env {
         name  = "STORAGE_CONNECTION_STRING"
         secret_name = "storage-connection-string"

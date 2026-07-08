@@ -77,6 +77,7 @@ module "container_app_job" {
   synapse_sql_password  = module.synapse.sql_password
   github_token          = var.github_token
   database_name         = var.database_name
+  input_container_name  = var.input_container_name
   
   # Add tags for resource management
   tags = {

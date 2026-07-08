@@ -35,6 +35,11 @@ variable "output_container_name" {
   type        = string
 }
 
+variable "input_container_name" {
+  description = "Name of the input container (holds device.json for meta names)"
+  type        = string
+}
+
 variable "synapse_server" {
   description = "Synapse SQL server endpoint"
   type        = string
