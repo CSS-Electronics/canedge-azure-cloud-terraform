@@ -8,6 +8,18 @@ resource "random_password" "sql_password" {
   min_special      = 1
 }
 
+# Read-only SQL login for queries (Grafana, Power BI, CANedge AI tools): Created by the table mapping job, which owns
+# the database objects it is granted on (see synapse-map-tables.py ensure_reader_login)
+resource "random_password" "reader_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+}
+
 resource "azurerm_synapse_workspace" "synapse" {
   name                                 = "synapse-${var.unique_id}"
   resource_group_name                  = var.resource_group_name

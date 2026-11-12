@@ -75,6 +75,8 @@ module "container_app_job" {
   output_container_name = local.output_container_name
   synapse_server        = module.synapse.synapse_workspace_endpoint
   synapse_sql_password  = module.synapse.sql_password
+  synapse_reader_user     = module.synapse.sql_reader_user
+  synapse_reader_password = module.synapse.sql_reader_password
   github_token          = var.github_token
   database_name         = var.database_name
   input_container_name  = var.input_container_name

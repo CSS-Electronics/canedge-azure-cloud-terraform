@@ -28,9 +28,16 @@ Name: Microsoft SQL Server
 Host: ${module.synapse.serverless_sql_endpoint}
 Database: ${var.database_name}
 Authentication: SQL Server Authentication
+User: ${module.synapse.sql_reader_user}
+Password: ${module.synapse.sql_reader_password}
+Min time interval: 1ms
+
+The user above is read-only (queries only: Grafana, Power BI, CANedge AI tools). It is created by
+the table mapping job: Run the job once (see below) before you connect.
+
+SQL admin (to manage the database, never needed for queries):
 User: sqladminuser
 Password: ${module.synapse.sql_admin_password}
-Min time interval: 1ms
 EOF
   sensitive = true
 }

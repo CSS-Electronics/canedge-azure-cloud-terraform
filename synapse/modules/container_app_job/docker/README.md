@@ -53,6 +53,8 @@ The Docker container expects the following environment variables:
 | MASTER_KEY_PASSWORD | Password for database master key |
 | SYNAPSE_DATABASE | Database name (default: parquetdatalake) |
 | SYNAPSE_USER | SQL admin username (default: sqladminuser) |
+| SYNAPSE_READER_USER | Read-only SQL login the job creates/updates (default: sqlreaderuser) |
+| SYNAPSE_READER_PASSWORD | Its password (optional: without it the read-only login is skipped) |
 
 ## Development Notes
 

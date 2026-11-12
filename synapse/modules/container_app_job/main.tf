@@ -99,6 +99,17 @@ resource "azurerm_container_app_job" "map_tables" {
         name  = "MASTER_KEY_PASSWORD"
         secret_name = "master-key-password"
       }
+
+      # Read-only SQL login for queries (created/updated by the job at every run)
+      env {
+        name  = "SYNAPSE_READER_USER"
+        value = var.synapse_reader_user
+      }
+
+      env {
+        name  = "SYNAPSE_READER_PASSWORD"
+        secret_name = "synapse-reader-password"
+      }
       
       # Add debug environment variable
       env {
@@ -135,6 +146,11 @@ resource "azurerm_container_app_job" "map_tables" {
   secret {
     name  = "master-key-password"
     value = random_password.master_key.result
+  }
+
+  secret {
+    name  = "synapse-reader-password"
+    value = var.synapse_reader_password
   }
 
   # GitHub Container Registry authentication token

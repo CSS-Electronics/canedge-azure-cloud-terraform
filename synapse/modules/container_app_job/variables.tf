@@ -51,6 +51,18 @@ variable "synapse_sql_password" {
   sensitive   = true
 }
 
+variable "synapse_reader_user" {
+  description = "Name of the read-only SQL login the job creates/updates"
+  type        = string
+  default     = "sqlreaderuser"
+}
+
+variable "synapse_reader_password" {
+  description = "Password of the read-only SQL login"
+  type        = string
+  sensitive   = true
+}
+
 variable "github_username" {
   description = "GitHub username for container registry authentication"
   type        = string

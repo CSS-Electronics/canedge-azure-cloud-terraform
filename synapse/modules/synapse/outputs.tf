@@ -35,6 +35,17 @@ output "sql_password" {
   sensitive   = true
 }
 
+output "sql_reader_user" {
+  description = "The read-only SQL login (created by the table mapping job)"
+  value       = "sqlreaderuser"
+}
+
+output "sql_reader_password" {
+  description = "The password of the read-only SQL login"
+  value       = random_password.reader_password.result
+  sensitive   = true
+}
+
 output "synapse_workspace_endpoint" {
   description = "The SQL Server endpoint for the Synapse workspace"
   value       = azurerm_synapse_workspace.synapse.connectivity_endpoints["sql"]

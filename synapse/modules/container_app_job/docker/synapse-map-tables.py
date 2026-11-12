@@ -307,6 +307,46 @@ def create_database_and_objects(synapse_server, synapse_user, synapse_password, 
         logger.error(f"Failed to create database and objects: {e}")
         sys.exit(1)
 
+def ensure_reader_login(synapse_server, synapse_user, synapse_password, synapse_database, reader_user, reader_password):
+    """Create/update the read-only SQL login for queries (Grafana, Power BI, CANedge AI tools), like the Athena
+    user of the AWS data lake. It can read the Parquet data lake (OPENROWSET via ParquetDataLake) and the mapped tables,
+    but not create, change or drop anything. Idempotent: Runs at every job execution, so the password stays in sync
+    with the Terraform secret. A failure is logged but does not stop the table mapping."""
+    import pymssql
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", reader_user):
+        logger.error(f"Invalid reader login name '{reader_user}' - read-only login not created")
+        return False
+    pw = reader_password.replace("'", "''")
+    endpoint = f"{synapse_server.split('.')[0].removesuffix('-ondemand')}-ondemand.sql.azuresynapse.net"
+    steps = [
+        ("master", f"""
+            IF NOT EXISTS (SELECT 1 FROM sys.sql_logins WHERE name = N'{reader_user}')
+                CREATE LOGIN [{reader_user}] WITH PASSWORD = N'{pw}'
+            ELSE
+                ALTER LOGIN [{reader_user}] WITH PASSWORD = N'{pw}'
+        """),
+        (synapse_database, f"""
+            IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'{reader_user}')
+                CREATE USER [{reader_user}] FROM LOGIN [{reader_user}]
+        """),
+        (synapse_database, f"GRANT ADMINISTER DATABASE BULK OPERATIONS TO [{reader_user}]"),   # OPENROWSET
+        (synapse_database, f"GRANT REFERENCES ON DATABASE SCOPED CREDENTIAL::[my_credential] TO [{reader_user}]"),
+        (synapse_database, f"GRANT SELECT ON SCHEMA::dbo TO [{reader_user}]"),   # mapped tables (dropdowns)
+    ]
+    try:
+        for database, sql in steps:
+            conn = pymssql.connect(server=endpoint, user=synapse_user, password=synapse_password, database=database,
+                                   autocommit=True)
+            try:
+                conn.cursor().execute(sql)
+            finally:
+                conn.close()
+        logger.info(f"Read-only SQL login '{reader_user}' created/updated (OPENROWSET + SELECT on dbo)")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to create the read-only SQL login '{reader_user}': {str(e).replace(pw, '***')}")
+        return False
+
 def main():
     """Main function to map Synapse tables"""
     logger.info("Starting Synapse table mapping process")
@@ -343,9 +383,17 @@ def main():
         sys.exit(0)
     
     # Create database and required objects
-    create_database_and_objects(synapse_server, synapse_user, synapse_password, synapse_database, 
+    create_database_and_objects(synapse_server, synapse_user, synapse_password, synapse_database,
                                storage_account, container_output, master_key_password)
-    
+
+    # Read-only SQL login for queries (optional: deployments before 2026-11 have no reader secret)
+    reader_password = os.environ.get("SYNAPSE_READER_PASSWORD")
+    if reader_password:
+        ensure_reader_login(synapse_server, synapse_user, synapse_password, synapse_database,
+                            os.environ.get("SYNAPSE_READER_USER", "sqlreaderuser"), reader_password)
+    else:
+        logger.info("No SYNAPSE_READER_PASSWORD: Read-only SQL login skipped (re-deploy Synapse to add it)")
+
     # First drop all existing tables for clean slate
     drop_all_tables_in_database(synapse_server, synapse_user, synapse_password, synapse_database)
     

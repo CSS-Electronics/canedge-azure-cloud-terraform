@@ -95,6 +95,15 @@ Replace:
 - `CSS_GITHUB_TOKEN` with the github token provided by CSS Electronics
   - *Get the token from the [CANedge Intro](https://www.csselectronics.com/pages/can-bus-hardware-software-docs) (Process/MF4 decoders/Parquet data lake - interfaces/Azure)*
 
+The deployment output shows the connection details for Grafana, Power BI and other query tools. They use the
+read-only SQL login `sqlreaderuser` (queries only), which the table mapping job creates at its first run: Run the
+`synapse-map-tables-<id>` job once after the deployment (Azure Portal > Container Apps > Jobs > Start execution). The
+SQL admin `sqladminuser` is only needed to manage the database.
+
+> [!NOTE]  
+> Existing deployments: Deploy Synapse again with the same parameters and run the table mapping job once to add the
+> read-only login (existing Grafana data sources with `sqladminuser` keep working)
+
 > [!NOTE]  
 > Pay-as-you-go subscriptions are limited to 2 active Synapse workspaces and the deployment fails if you have reached this quota limit. In this case, remove any unused workspaces and deploy again
 
